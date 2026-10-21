@@ -1,0 +1,15 @@
+# Copy to the host's /etc/fail2ban/jail.d/ after checking logpath and firewall chain.
+[catppuccindock]
+enabled = true
+filter = catppuccindock
+logpath = /opt/catppuccindock/logs/auth/auth.log
+backend = polling
+usedns = no
+logtimezone = UTC
+findtime = 15m
+maxretry = 5
+bantime = 1h
+# Docker published ports traverse DOCKER-USER, not the host INPUT chain.
+# Check this chain exists on the Docker host before enabling this example.
+banaction = iptables-allports
+chain = DOCKER-USER

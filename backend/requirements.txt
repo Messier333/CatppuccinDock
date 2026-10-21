@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg[binary]
+Authlib==1.9.1
+pyotp==2.9.0
+cryptography>=46,<49
+httpx>=0.28,<1
+itsdangerous>=2.2,<3
+qrcode>=8,<9
+Pillow>=12.1.1,<14
+boto3>=1.36,<2
+CairoSVG==2.8.2

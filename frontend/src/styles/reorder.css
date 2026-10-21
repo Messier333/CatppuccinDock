@@ -1,0 +1,22 @@
+/* Both the main portal and settings need the same drag visuals. */
+.reorder-ghost.reorder-ghost {
+  opacity: 1;
+  color: transparent;
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  outline: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: -1px;
+  border-radius: 6px;
+}
+.reorder-ghost > * { visibility: hidden !important; }
+.reorder-chosen { border-radius: 6px; }
+.reorder-floating.reorder-floating {
+  color: var(--text);
+  background: var(--surface-raised);
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+  box-shadow: 0 10px 24px rgb(0 0 0 / 20%);
+  opacity: 1 !important;
+  pointer-events: none !important;
+  transition: none !important;
+  animation: none !important;
+}

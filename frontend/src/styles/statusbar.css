@@ -1,0 +1,62 @@
+.startpage-statusbar { flex-wrap: wrap; padding-block: 5px; gap: 3px; }
+.footer-items { display: flex; flex: 1 1 0; min-width: 0; flex-wrap: wrap; align-items: center; gap: 3px; }
+.footer-item { display: flex; align-items: center; min-height: 30px; min-width: 0; max-width: 100%; }
+.footer-tabs-item { margin-right: auto; }
+.footer-item .statusbar-tabs { min-height: 30px; margin-left: 5px; flex-wrap: wrap; }
+.footer-item .statusbar-tabs button { min-height: 30px; }
+.footer-edit-button { flex: 0 0 28px; padding-inline: 4px; }
+.footer-edit-button.active { color: var(--accent); background: var(--option-hover); }
+.footer-grip, .home-grip { border: 0; background: transparent; color: var(--muted); padding: 2px; display: inline-flex; align-items: center; gap: 4px; cursor: grab; touch-action: none; user-select: none; }
+.footer-grip:focus-visible, .home-grip:focus-visible { outline: 2px solid var(--accent); border-radius: 3px; }
+.footer-editing .footer-item { border: 1px dashed var(--control-border); border-radius: 5px; }
+.footer-error { flex: 0 0 100%; color: var(--red); font-size: 11px; }
+.home-edit-toolbar { width: var(--panel-width); padding: 10px; border: 1px dashed var(--control-border); border-radius: 7px; color: var(--subtext); font-size: 11px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.home-edit-toolbar p { color: var(--red); margin: 0; }
+.home-tab-order { display: flex; flex-wrap: wrap; gap: 8px; }
+.home-tab-order > span { border: 1px solid var(--control-border); border-radius: 5px; padding: 5px; }
+.startpage-category h2 { display: flex; align-items: center; gap: 5px; }
+.widget-anchor { display: inline-flex; max-width: 100%; align-items: center; }
+.clock-widget[aria-pressed="true"] { color: var(--accent); background: var(--option-hover); }
+.widget-panel { width: min(304px, calc(100vw - 24px)); position: fixed; inset: auto; margin: 0; box-sizing: border-box; max-width: calc(100vw - 24px); max-height: calc(100svh - 24px); overflow: auto; padding: 16px; border: 1px solid var(--control-border); border-radius: 13px; background: var(--surface); color: var(--text); box-shadow: var(--menu-shadow); font: 12px/1.6 'Nunito', 'Noto Sans KR', sans-serif; z-index: 80; }
+.widget-panel:not([data-open="true"]) { display: none; }
+.widget-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.widget-panel-heading strong { color: var(--text); font-size: 14px; }
+.widget-panel-heading small, .widget-detail, .widget-attribution { color: var(--subtext); font-size: 11px; }
+.widget-panel-heading > svg { color: var(--accent); }
+.widget-detail { margin-block: 10px; overflow-wrap: anywhere; }
+.widget-attribution { margin: 12px 0 0; text-align: center; }
+.widget-attribution a { color: var(--subtext); }
+.weather-location { color: var(--subtext); margin: 12px 0 0; }
+.weather-temperature { color: var(--accent); font-size: 28px; margin: 4px 0 12px; font-weight: 700; line-height: 1.3; }
+.weather-widget:disabled { cursor: progress; opacity: .8; }
+.widget-spinning { animation: widget-spin .9s linear infinite; }
+@keyframes widget-spin { to { transform: rotate(360deg); } }
+.calendar-today { color: var(--subtext); margin: 7px 0 14px; font-size: 11px; }
+.calendar-navigation { display: flex; align-items: center; gap: 5px; }
+.calendar-navigation > button { flex: 0 0 25px; display: grid; place-items: center; padding: 6px 0; border: 0; border-radius: 5px; color: var(--subtext); background: transparent; cursor: pointer; }
+.calendar-navigation > button:hover { color: var(--accent); background: var(--option-hover); }
+.calendar-navigation .theme-select { flex: 1; min-width: 0; }
+.calendar-navigation .theme-select-trigger { padding: 6px 7px; min-height: 32px; font-size: 11px; gap: 3px; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; margin-block: 12px; text-align: center; }
+.calendar-weekday { padding: 4px 0; color: var(--muted); font-size: 10px; }
+.calendar-grid button { aspect-ratio: 1; padding: 0; border: 1px solid transparent; border-radius: 7px; color: var(--text); background: transparent; font: inherit; cursor: pointer; }
+.calendar-grid button.other-month { color: var(--muted); opacity: .65; }
+.calendar-grid button.today { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); color: var(--accent); font-weight: 800; }
+.calendar-grid button.selected { border-color: var(--accent); }
+.calendar-grid button:hover { background: var(--option-hover); }
+.calendar-reset { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; padding: 7px; border: 1px solid var(--control-border); border-radius: 7px; color: var(--subtext); background: var(--surface-raised); font: inherit; cursor: pointer; }
+.calendar-reset:hover { color: var(--accent); }
+.metric-widget { gap: 5px; max-width: 100%; }
+.metric-widget > span { max-width: 90px; overflow: hidden; text-overflow: ellipsis; }
+.metric-widget strong { font-weight: 700; color: var(--text); }
+.metric-widget > svg, .metric-history { color: var(--accent); }
+.metric-sparkline { width: 64px; height: 24px; }
+.metric-sparkline polyline, .metric-history polyline { fill: none; stroke: currentColor; stroke-width: 1.4; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
+.metric-history { width: 100%; height: 65px; }
+.metric-dot { flex: 0 0 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+.metric-dot[data-state="up"] { background: var(--green); }
+.metric-dot[data-state="down"] { background: var(--red); }
+.metric-dot[data-state="maintenance"] { background: var(--peach); }
+@media (max-width: 760px) { .weather-widget { display: inline-flex; } .footer-items { gap: 3px 0; } .statusbar-widget { padding-inline: 5px; } }
+@media (max-width: 420px) { .weather-widget { font-size: 9px; } .statusbar-tabs button { padding-inline: 6px; } }
+@media (prefers-reduced-motion: reduce) { .widget-spinning { animation-duration: 2s; } }

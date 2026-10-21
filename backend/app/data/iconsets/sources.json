@@ -1,0 +1,20 @@
+[
+  {
+    "prefix": "tabler",
+    "source": "https://github.com/iconify/icon-sets/blob/master/json/tabler.json",
+    "sha256": "de1730285dea691c974e120f6ebf5421eb0ae4216d70f93c69c5182112791656",
+    "last_modified": 1791401203
+  },
+  {
+    "prefix": "simple-icons",
+    "source": "https://github.com/iconify/icon-sets/blob/master/json/simple-icons.json",
+    "sha256": "34feaa90d3b997e9147980993bd5777133d13456ba1b92ff1fce64878389f744",
+    "last_modified": 1791785520
+  },
+  {
+    "prefix": "mdi",
+    "source": "https://github.com/iconify/icon-sets/blob/master/json/mdi.json",
+    "sha256": "d4385fa5bbaead1b5c485151b9a3f7949f21be0dcd5df9283f4bc6b2e9fcab22",
+    "last_modified": 1737398331
+  }
+]

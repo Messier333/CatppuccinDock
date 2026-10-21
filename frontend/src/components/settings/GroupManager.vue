@@ -1,0 +1,14 @@
+<script setup>
+import { onMounted, reactive, ref } from 'vue';
+import { api } from '../../lib/api.js';
+const groups=ref([]),users=ref([]),error=ref(''),notice=ref(''),busy=ref(false),dialog=ref(null),target=ref(null),query=ref('');
+const draft=reactive({name:'',user_ids:[]});
+async function load(){[groups.value,users.value]=await Promise.all([api('admin/groups'),api('admin/users')]);}
+onMounted(async()=>{try{await load();}catch(e){error.value=e.message;}});
+function edit(item=null){target.value=item;Object.assign(draft,{name:item?.name||'',user_ids:[...(item?.user_ids||[])]});query.value='';error.value='';dialog.value.showModal();}
+async function save(){busy.value=true;error.value='';try{await api(`admin/groups${target.value?'/'+target.value.id:''}`,{method:target.value?'PUT':'POST',body:JSON.stringify(draft)});dialog.value.close();await load();notice.value='그룹을 저장했어요. 링크 접근 권한에 바로 반영됩니다.';}catch(e){error.value=e.message;}finally{busy.value=false;}}
+async function remove(item){if(!confirm(`‘${item.name}’ 그룹을 삭제할까요? 이 그룹을 통해 허용한 링크는 그룹 구성원에게 숨겨집니다.`))return;try{await api('admin/groups/'+item.id,{method:'DELETE'});await load();}catch(e){error.value=e.message;}}
+</script>
+<template><section class="settings-section"><div class="management-toolbar"><p class="settings-description">그룹을 만들고 사용자를 배정하세요. 공개 링크 관리에서 그룹별로 허용할 링크를 지정할 수 있습니다. 관리자는 모든 공개 링크를 확인할 수 있습니다.</p><button class="primary-button" @click="edit()">그룹 추가</button></div><p v-if="error&&!dialog?.open" class="form-error" role="alert">{{ error }}</p><p v-if="notice" class="form-notice" role="status">{{ notice }}</p>
+<div class="settings-card"><article v-for="group in groups" :key="group.id" class="editable-link"><div class="operation-row-content"><strong>{{ group.name }}</strong><small>{{ group.user_ids.length }}명</small></div><button class="secondary-button" :aria-label="group.name+' 그룹 수정'" @click="edit(group)">수정</button><button class="secondary-button danger" @click="remove(group)">삭제</button></article><p v-if="!groups.length" class="settings-empty">등록한 그룹이 없습니다.</p></div>
+<dialog ref="dialog" v-dialog-dismiss="busy" class="editor-dialog"><form class="settings-form" @submit.prevent="save"><div class="card-heading"><h2>{{ target?'그룹 수정':'그룹 추가' }}</h2><button class="icon-button" type="button" aria-label="닫기" :disabled="busy" @click="dialog.close()">×</button></div><label>그룹 이름<input v-model="draft.name" required maxlength="80" /></label><label>사용자 검색<input v-model="query" type="search" /></label><div class="selection-list"><label v-for="user in users.filter(item=>item.username.toLowerCase().includes(query.toLowerCase()))" :key="user.id" class="checkbox-label"><input v-model="draft.user_ids" type="checkbox" :value="user.id" />{{ user.username }}<small>{{ user.active?'':'비활성' }}</small></label></div><p v-if="error" class="form-error" role="alert">{{ error }}</p><button class="primary-button" :disabled="busy">그룹 저장</button></form></dialog></section></template>

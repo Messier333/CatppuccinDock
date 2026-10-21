@@ -1,0 +1,27 @@
+/* Local Roboto font definitions */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+    font-display: swap;
+  font-weight: 100;
+  font-stretch: normal;
+  src: url('./roboto-100.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+    font-display: swap;
+  font-weight: 400;
+  font-stretch: normal;
+  src: url('./roboto-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+    font-display: swap;
+  font-weight: 700;
+  font-stretch: normal;
+  src: url('./roboto-700.woff2') format('woff2');
+}

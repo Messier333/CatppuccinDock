@@ -1,0 +1,47 @@
+/* Shared controls are loaded before any view, including the login screen. */
+.settings-form input:where(:not([type=checkbox], [type=radio], [type=hidden])),
+.settings-form select,
+.settings-form textarea,
+.login-field input {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--control-border);
+  border-radius: var(--control-radius);
+  color: var(--text);
+  background: var(--control-bg);
+  font-size: 13px;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.settings-form textarea { min-height: 100px; padding-block: 12px; resize: vertical; }
+.settings-form input[type=file] { height: 42px; padding: 6px; line-height: 28px; cursor: pointer; }
+.settings-form input[type=file]::file-selector-button { height: 28px; margin: 0 10px 0 0; padding: 0 11px; border: 1px solid var(--control-border); border-radius: 6px; color: var(--subtext); background: var(--surface); font: inherit; line-height: 26px; vertical-align: middle; cursor: pointer; }
+.settings-form input[type=file]:hover::file-selector-button { color: var(--accent); border-color: var(--control-hover-border); }
+.settings-form input[type=file]:disabled, .settings-form input[type=file]:disabled::file-selector-button { cursor: default; opacity: .6; }
+.settings-form input:hover:not(:disabled), .settings-form textarea:hover:not(:disabled), .login-field input:hover { border-color: var(--control-hover-border); }
+.settings-form input:focus, .settings-form textarea:focus, .login-field input:focus { border-color: var(--accent); }
+input:autofill { box-shadow: 0 0 0 1000px var(--control-bg) inset; -webkit-text-fill-color: var(--text); caret-color: var(--text); }
+input:-webkit-autofill { box-shadow: 0 0 0 1000px var(--control-bg) inset; -webkit-text-fill-color: var(--text); caret-color: var(--text); }
+input[type=checkbox], input[type=radio] { accent-color: var(--accent); }
+input[type=search]::-webkit-search-cancel-button { cursor: pointer; }
+dialog::backdrop { background: var(--dialog-backdrop); backdrop-filter: blur(5px); }
+
+.theme-select { display: block; min-width: 0; width: 100%; }
+.theme-select-trigger { display: flex; width: 100%; min-width: 0; min-height: 42px; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--control-border); border-radius: var(--control-radius); color: var(--text); background: var(--control-bg); text-align: left; font-size: 13px; font-weight: 400; cursor: pointer; transition: border-color .15s, background .15s; }
+.theme-select-trigger > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.theme-select-trigger > svg { flex: 0 0 auto; color: var(--muted); transition: transform .15s; }
+.theme-select-trigger:hover:not(:disabled), .theme-select-trigger.expanded { border-color: var(--control-hover-border); }
+.theme-select-trigger.expanded > svg { transform: rotate(180deg); }
+.theme-select-trigger:disabled { opacity: .55; cursor: default; }
+.theme-select-menu { position: fixed; inset: auto; margin: 0; padding: 5px; border: 1px solid var(--control-border); border-radius: 11px; color: var(--text); background: var(--control-bg); box-shadow: var(--menu-shadow); overflow-y: auto; overscroll-behavior: contain; z-index: 1000; font-family: inherit; }
+.theme-select-menu[data-open=false] { display: none; }
+.theme-select-menu[data-open=true] { display: block; }
+.theme-select-menu::backdrop { background: transparent; }
+.theme-select-option { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 15px; min-height: 36px; padding: 9px 10px; border: 0; border-radius: 7px; color: var(--subtext); background: transparent; text-align: left; font-family: inherit; font-size: 12px; font-weight: 400; line-height: 1.5; cursor: pointer; }
+.theme-select-option > span { overflow-wrap: anywhere; }
+.theme-select-option.highlighted { background: var(--option-hover); color: var(--text); }
+.theme-select-option.selected { color: var(--accent); }
+.theme-select-option:disabled { opacity: .4; cursor: default; }
+.theme-select-option svg { flex: 0 0 auto; }
+.theme-select-empty { display: block; padding: 12px; color: var(--muted); font-size: 12px; }

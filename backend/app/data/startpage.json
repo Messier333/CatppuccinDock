@@ -1,0 +1,330 @@
+{
+  "tabs": [
+    {
+      "name": "myself",
+      "categories": [
+        {
+          "name": "bookmarks",
+          "links": [
+            {
+              "name": "raindrop",
+              "url": "https://app.raindrop.io",
+              "icon": "droplet-bolt",
+              "icon_color": "#40a02b"
+            },
+            {
+              "name": "musicForProgramming();",
+              "url": "https://musicforprogramming.net",
+              "icon": "binary-tree",
+              "icon_color": "#fe640b"
+            }
+          ]
+        },
+        {
+          "name": "workspace",
+          "links": [
+            {
+              "name": "gmail",
+              "url": "https://mail.google.com",
+              "icon": "brand-gmail",
+              "icon_color": "#40a02b"
+            },
+            {
+              "name": "calendar",
+              "url": "https://calendar.google.com",
+              "icon": "calendar-filled",
+              "icon_color": "#fe640b"
+            },
+            {
+              "name": "sheets",
+              "url": "https://docs.google.com/spreadsheets",
+              "icon": "table",
+              "icon_color": "#d20f39"
+            },
+            {
+              "name": "drive",
+              "url": "https://drive.google.com/drive/home",
+              "icon": "brand-google-drive",
+              "icon_color": "#1e66f5"
+            }
+          ]
+        },
+        {
+          "name": "media",
+          "links": [
+            {
+              "name": "уп",
+              "url": "https://www.pravda.com.ua",
+              "icon": "news",
+              "icon_color": "#40a02b"
+            },
+            {
+              "name": "mil.in.ua",
+              "url": "https://mil.in.ua",
+              "icon": "badge-filled",
+              "icon_color": "#fe640b"
+            },
+            {
+              "name": "куток",
+              "url": "https://kutok.io",
+              "icon": "border-radius",
+              "icon_color": "#d20f39"
+            },
+            {
+              "name": "ґрунт",
+              "url": "https://grnt.media",
+              "icon": "eye-bolt",
+              "icon_color": "#1e66f5"
+            },
+            {
+              "name": "village",
+              "url": "https://www.village.com.ua",
+              "icon": "home-2",
+              "icon_color": "#8839ef"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "dev",
+      "categories": [
+        {
+          "name": "development",
+          "links": [
+            {
+              "name": "github",
+              "url": "https://github.com",
+              "icon": "brand-github",
+              "icon_color": "#40a02b"
+            },
+            {
+              "name": "stackoverflow",
+              "url": "https://stackoverflow.com",
+              "icon": "brand-stackoverflow",
+              "icon_color": "#fe640b"
+            },
+            {
+              "name": "duckdb",
+              "url": "https://app.motherduck.com",
+              "icon": "file-type-sql",
+              "icon_color": "#d20f39"
+            },
+            {
+              "name": "collab",
+              "url": "https://colab.research.google.com",
+              "icon": "notebook",
+              "icon_color": "#8839ef"
+            }
+          ]
+        },
+        {
+          "name": "challenges",
+          "links": [
+            {
+              "name": "kaggle",
+              "url": "https://www.kaggle.com",
+              "icon": "brain",
+              "icon_color": "#40a02b"
+            },
+            {
+              "name": "leetcode",
+              "url": "https://leetcode.com",
+              "icon": "code-plus",
+              "icon_color": "#fe640b"
+            },
+            {
+              "name": "exercism",
+              "url": "https://exercism.org",
+              "icon": "code-minus",
+              "icon_color": "#d20f39"
+            },
+            {
+              "name": "aoc",
+              "url": "https://adventofcode.com",
+              "icon": "brand-linktree",
+              "icon_color": "#1e66f5"
+            }
+          ]
+        },
+        {
+          "name": "resources",
+          "links": [
+            {
+              "name": "dou",
+              "url": "https://dou.ua",
+              "icon": "brand-prisma",
+              "icon_color": "#40a02b"
+            },
+            {
+              "name": "hackernews",
+              "url": "https://news.ycombinator.com",
+              "icon": "brand-redhat",
+              "icon_color": "#fe640b"
+            },
+            {
+              "name": "uber engineering",
+              "url": "https://www.uber.com/en-GB/blog/london/engineering",
+              "icon": "brand-uber",
+              "icon_color": "#d20f39"
+            },
+            {
+              "name": "netflix tech blog",
+              "url": "https://netflixtechblog.com",
+              "icon": "brand-netflix",
+              "icon_color": "#1e66f5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "chi ll",
+      "categories": [
+        {
+          "name": "social media",
+          "links": [
+            {
+              "name": "telegram",
+              "url": "https://web.telegram.org",
+              "icon": "brand-telegram",
+              "icon_color": "#40a02b"
+            },
+            {
+              "name": "facebook",
+              "url": "https://www.facebook.com",
+              "icon": "brand-facebook",
+              "icon_color": "#fe640b"
+            },
+            {
+              "name": "reddit",
+              "url": "https://www.reddit.com/r/unixporn",
+              "icon": "brand-reddit",
+              "icon_color": "#d20f39"
+            }
+          ]
+        },
+        {
+          "name": "gaming",
+          "links": [
+            {
+              "name": "infiniteBacklog",
+              "url": "https://infinitebacklog.net",
+              "icon": "device-gamepad",
+              "icon_color": "#40a02b"
+            },
+            {
+              "name": "steam",
+              "url": "https://store.steampowered.com",
+              "icon": "brand-steam",
+              "icon_color": "#fe640b"
+            },
+            {
+              "name": "epicgames",
+              "url": "https://store.epicgames.com",
+              "icon": "brand-fortnite",
+              "icon_color": "#d20f39"
+            },
+            {
+              "name": "nintendo",
+              "url": "https://store.nintendo.co.uk",
+              "icon": "device-nintendo",
+              "icon_color": "#1e66f5"
+            }
+          ]
+        },
+        {
+          "name": "video",
+          "links": [
+            {
+              "name": "anilist",
+              "url": "https://anilist.co/home",
+              "icon": "brand-funimation",
+              "icon_color": "#40a02b"
+            },
+            {
+              "name": "youtube",
+              "url": "https://www.youtube.com",
+              "icon": "brand-youtube",
+              "icon_color": "#fe640b"
+            },
+            {
+              "name": "patreon",
+              "url": "https://www.patreon.com",
+              "icon": "brand-patreon",
+              "icon_color": "#d20f39"
+            },
+            {
+              "name": "kyivstar",
+              "url": "https://tv.kyivstar.ua",
+              "icon": "star-filled",
+              "icon_color": "#1e66f5"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "search": {
+    "engines": {
+      "p": [
+        "https://www.perplexity.ai/search/?q=",
+        "PerplexityAI"
+      ],
+      "d": [
+        "https://duckduckgo.com/?q=",
+        "DuckDuckGo"
+      ],
+      "g": [
+        "https://google.com/search?q=",
+        "Google"
+      ],
+      "y": [
+        "https://yandex.com/search/?text=",
+        "Yandex"
+      ]
+    },
+    "default": "d",
+    "openMode": "same_tab"
+  },
+  "fastlink": "https://www.perplexity.ai",
+  "clock": {
+    "format": "24h",
+    "icon_color": "#e64553",
+    "timezone": "Asia/Seoul"
+  },
+  "additionalClocks": [],
+  "temperature": {
+    "location": "London",
+    "scale": "C",
+    "appId": ""
+  },
+  "palette": {
+    "rosewater": "#dc8a78",
+    "flamingo": "#dd7878",
+    "pink": "#ea76cb",
+    "mauve": "#8839ef",
+    "red": "#d20f39",
+    "maroon": "#e64553",
+    "peach": "#fe640b",
+    "yellow": "#df8e1d",
+    "green": "#40a02b",
+    "teal": "#179299",
+    "sky": "#04a5e5",
+    "sapphire": "#209fb5",
+    "blue": "#1e66f5",
+    "lavender": "#7287fd",
+    "text": "#4c4f69",
+    "subtext1": "#5c5f77",
+    "subtext0": "#6c6f85",
+    "overlay2": "#7c7f93",
+    "overlay1": "#8c8fa1",
+    "overlay0": "#9ca0b0",
+    "surface2": "#acb0be",
+    "surface1": "#bcc0cc",
+    "surface0": "#ccd0da",
+    "base": "#eff1f5",
+    "mantle": "#e6e9ef",
+    "crust": "#dce0e8"
+  }
+}

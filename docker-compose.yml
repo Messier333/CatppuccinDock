@@ -1,0 +1,93 @@
+services:
+  garage:
+    image: dxflrs/garage:v2.4.1
+    command: ["/garage", "server", "--single-node", "--default-bucket"]
+    environment:
+      RUST_LOG: warn
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:?Generate storage credentials with scripts/setup_storage.py}
+      GARAGE_DEFAULT_ACCESS_KEY: ${S3_ACCESS_KEY_ID:?Generate storage credentials with scripts/setup_storage.py}
+      GARAGE_DEFAULT_SECRET_KEY: ${S3_SECRET_ACCESS_KEY:?Generate storage credentials with scripts/setup_storage.py}
+      GARAGE_DEFAULT_BUCKET: ${S3_BUCKET:-catppuccindock}
+    volumes:
+      - ./deploy/garage/garage.toml:/etc/garage.toml:ro
+      - garage_meta:/var/lib/garage/meta
+      - garage_data:/var/lib/garage/data
+    expose:
+      - "3900"
+    healthcheck:
+      test: ["CMD", "/garage", "status"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+  database:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-catppuccindock}
+      POSTGRES_USER: ${POSTGRES_USER:-catppuccindock}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env before starting}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      POSTGRES_HOST: database
+      ADMIN_SETUP_CODE: ${ADMIN_SETUP_CODE:?Set ADMIN_SETUP_CODE in .env before starting}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      AUTH_ENCRYPTION_KEY: ${AUTH_ENCRYPTION_KEY:?Set AUTH_ENCRYPTION_KEY in .env before starting}
+      AUTH_LOG_PATH: /var/log/catppuccindock/auth.log
+      MEDIA_STORAGE_BACKEND: ${MEDIA_STORAGE_BACKEND:-s3}
+      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-http://garage:3900}
+      S3_REGION: ${S3_REGION:-garage}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?Generate storage credentials with scripts/setup_storage.py}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?Generate storage credentials with scripts/setup_storage.py}
+      S3_BUCKET: ${S3_BUCKET:-catppuccindock}
+      S3_KEY_PREFIX: ${S3_KEY_PREFIX:-catppuccindock}
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-catppuccindock}
+      POSTGRES_USER: ${POSTGRES_USER:-catppuccindock}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env before starting}
+    volumes:
+      - ./logs/auth:/var/log/catppuccindock
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    depends_on:
+      garage:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "8090:80"
+    volumes:
+      - ./deploy/nginx/trusted-proxies:/etc/nginx/trusted-proxies:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  garage_meta:
+  garage_data:
