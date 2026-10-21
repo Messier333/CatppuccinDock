@@ -17,6 +17,13 @@ class MonitoringAndSync(unittest.TestCase):
         self.assertEqual((connection.host,connection.port),('192.0.2.1',1))
         self.assertEqual(monitoring.secure_tls_context().minimum_version,ssl.TLSVersion.TLSv1_2)
 
+    def test_request_target_encodes_uri_components_and_rejects_invalid_input(self):
+        self.assertEqual(monitoring.safe_request_target('/a b/%20/한','q=a b&next=%2F'),
+                         '/a%20b/%20/%ED%95%9C?q=a%20b&next=%2F')
+        for path,query in (('/bad%xx',''),('/bad\r\npath',''),('/', 'bad\x7fquery')):
+            with self.subTest(path=path,query=query),self.assertRaises(ValueError):
+                monitoring.safe_request_target(path,query)
+
     def test_classification_dns_policy_and_no_rebinding(self):
         self.assertEqual(monitoring.classify(200)[0],'up')
         self.assertEqual(monitoring.classify(401)[0],'up')

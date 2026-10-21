@@ -3,7 +3,7 @@ import socket
 import time
 from urllib.parse import urljoin, urlsplit
 
-from app.services.monitoring import pinned_http_connection, safe_addresses, secure_tls_context
+from app.services.monitoring import pinned_http_connection, safe_addresses, safe_request_target, secure_tls_context
 
 
 class RemoteMediaError(ValueError):
@@ -40,7 +40,7 @@ def fetch_public(url, *, max_bytes, accept, timeout=15, on_chunk=None):
             sock = secure_tls_context().wrap_socket(sock, server_hostname=parsed.hostname)
             connection = pinned_http_connection()
             connection.sock = sock
-            path = (parsed.path or '/') + ('?' + parsed.query if parsed.query else '')
+            path = safe_request_target(parsed.path, parsed.query)
             connection.putrequest('GET', path, skip_host=True, skip_accept_encoding=True)
             connection.putheader('Host', parsed.hostname)
             connection.putheader('User-Agent', 'CatppuccinDock/1.0 (self-hosted bookmark portal)')

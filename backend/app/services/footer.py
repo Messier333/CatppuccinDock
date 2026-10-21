@@ -12,7 +12,7 @@ from app.core.security import cipher
 from app.db.models import FooterMetric, Setting
 from app.db.session import SessionLocal
 from app.schemas.footer import BASE_ITEMS, REQUIRED_ITEMS
-from app.services.monitoring import pinned_http_connection, safe_addresses, secure_tls_context
+from app.services.monitoring import pinned_http_connection, safe_addresses, safe_request_target, secure_tls_context
 
 
 class AuthenticationFailure(ValueError):
@@ -56,8 +56,7 @@ def json_request(url, private, token=''):
             sock = secure_tls_context().wrap_socket(sock, server_hostname=host)
         connection = pinned_http_connection()
         connection.sock = sock
-        path = parsed.path or '/'
-        if parsed.query: path += '?' + parsed.query
+        path = safe_request_target(parsed.path, parsed.query)
         host_header = ('[' + host + ']' if ':' in host else host) + (':' + str(parsed.port) if parsed.port else '')
         connection.putrequest('GET', path, skip_host=True, skip_accept_encoding=True)
         for key, value in {'Host': host_header, 'Accept': 'application/json', 'Connection': 'close', 'User-Agent': 'CatppuccinDock-Metrics/1.0', **({'Authorization': 'Bearer ' + token} if token else {})}.items():

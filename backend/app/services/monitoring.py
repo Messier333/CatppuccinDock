@@ -1,12 +1,13 @@
 """Admin-approved, pinned-address HTTP checks without user cookies or redirects."""
 import http.client
 import ipaddress
+import re
 import socket
 import ssl
 import time
 from concurrent.futures import ThreadPoolExecutor
 from threading import BoundedSemaphore, RLock
-from urllib.parse import urlsplit
+from urllib.parse import quote, urlsplit
 from sqlalchemy import select
 from app.db.models import ServiceMonitor
 from app.db.session import SessionLocal
@@ -16,6 +17,10 @@ MAX_MONITORS = 1000
 _queue_lock = RLock()
 _executor = None
 _jobs = {}
+_SAFE_REQUEST_TARGET = re.compile(
+    r"/(?:[A-Za-z0-9._~!$&'()*+,;=:@/-]|%[0-9A-Fa-f]{2})*"
+    r"(?:\?(?:[A-Za-z0-9._~!$&'()*+,;=:@/?-]|%[0-9A-Fa-f]{2})*)?\Z"
+)
 
 
 def secure_tls_context():
@@ -27,6 +32,17 @@ def secure_tls_context():
 def pinned_http_connection():
     """Build an HTTP formatter whose destination comes only from its pinned socket."""
     return http.client.HTTPConnection('192.0.2.1', 1)
+
+
+def safe_request_target(path, query=''):
+    if any(ord(character) < 32 or ord(character) == 127 for character in path + query):
+        raise ValueError('Invalid URL path or query')
+    path = quote(path or '/', safe="/:@!$&'()*+,;=-._~%")
+    query = quote(query, safe="/?:@!$&'()*+,;=-._~%")
+    target = path + ('?' + query if query else '')
+    if not _SAFE_REQUEST_TARGET.fullmatch(target):
+        raise ValueError('Invalid URL path or query')
+    return target
 
 
 def start():
@@ -98,8 +114,7 @@ def check_url(url, allow_private=False):
         sock=socket.create_connection((addresses[0],port),timeout=3)
         if parsed.scheme=='https':sock=secure_tls_context().wrap_socket(sock,server_hostname=host)
         connection=pinned_http_connection();connection.sock=sock
-        path=parsed.path or '/'
-        if parsed.query:path+='?'+parsed.query
+        path=safe_request_target(parsed.path,parsed.query)
         host_header=('['+host+']' if ':' in host else host)+((':'+str(parsed.port)) if parsed.port else '')
         for method in ('HEAD','GET'):
             if method=='GET':

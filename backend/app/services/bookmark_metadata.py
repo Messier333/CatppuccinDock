@@ -8,7 +8,7 @@ from threading import BoundedSemaphore
 from urllib.parse import urljoin, urlsplit
 
 from app.services.icons import collection_data
-from app.services.monitoring import pinned_http_connection, safe_addresses, secure_tls_context
+from app.services.monitoring import pinned_http_connection, safe_addresses, safe_request_target, secure_tls_context
 
 slots = BoundedSemaphore(4)
 
@@ -62,7 +62,7 @@ def public_title(url):
             if parsed.scheme=='https': sock = secure_tls_context().wrap_socket(sock,server_hostname=parsed.hostname)
             connection = pinned_http_connection(); connection.sock = sock
             host = ('['+parsed.hostname+']' if ':' in parsed.hostname else parsed.hostname) + (':'+str(parsed.port) if parsed.port else '')
-            path = (parsed.path or '/') + ('?'+parsed.query if parsed.query else '')
+            path = safe_request_target(parsed.path, parsed.query)
             connection.putrequest('GET',path,skip_host=True,skip_accept_encoding=True)
             connection.putheader('Host',host);connection.putheader('User-Agent','CatppuccinDock-Preview/1.0')
             connection.putheader('Accept','text/html');connection.putheader('Connection','close');connection.endheaders()
