@@ -1,0 +1,9 @@
+name: CatppuccinDock security
+paths:
+  - backend/app
+  - frontend/src
+  - frontend/public/sw.js
+paths-ignore:
+  - backend/app/data/iconsets
+queries:
+  - uses: security-extended

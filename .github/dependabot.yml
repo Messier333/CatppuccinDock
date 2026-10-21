@@ -7,3 +7,24 @@ updates:
     groups:
       github-actions:
         patterns: ['*']
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    groups:
+      npm-compatible:
+        update-types: [minor, patch]
+  - package-ecosystem: pip
+    directory: /backend
+    schedule:
+      interval: weekly
+    groups:
+      python-compatible:
+        update-types: [minor, patch]
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      development-tools:
+        update-types: [minor, patch]

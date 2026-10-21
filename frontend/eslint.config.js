@@ -3,7 +3,7 @@ import vue from "eslint-plugin-vue";
 import globals from "globals";
 
 export default [
-  { ignores: ["dist/**", "node_modules/**"] },
+  { ignores: ["dist/**", "node_modules/**", "test-results/**", "playwright-report/**"] },
   { ...js.configs.recommended, files: ["**/*.{js,mjs,vue}"] },
   ...vue.configs["flat/essential"],
   {
@@ -11,7 +11,7 @@ export default [
     languageOptions: { globals: globals.browser },
   },
   {
-    files: ["tests/**/*.mjs", "vite.config.js", "eslint.config.js"],
+    files: ["tests/**/*.mjs", "e2e/**/*.js", "playwright.config.js", "vite.config.js", "eslint.config.js"],
     languageOptions: { globals: globals.node },
   },
   {

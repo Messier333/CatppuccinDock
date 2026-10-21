@@ -1,0 +1,22 @@
+# Disposable browser-test stack; use scripts/run_e2e.py to generate isolated credentials.
+services:
+  backend:
+    image: catppuccindock-backend:e2e
+    build:
+      context: ./backend
+    environment:
+      AUTH_LOG_PATH: /tmp/auth.log
+    volumes: !reset []
+    restart: "no"
+
+  frontend:
+    image: catppuccindock-frontend:e2e
+    build:
+      context: ./frontend
+    volumes: !reset []
+    restart: "no"
+
+  database:
+    restart: "no"
+  garage:
+    restart: "no"
