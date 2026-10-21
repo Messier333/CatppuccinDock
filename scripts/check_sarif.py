@@ -20,8 +20,14 @@ def check(directory):
         for run in runs:
             if any(not invocation.get('executionSuccessful', True) for invocation in run.get('invocations', [])):
                 raise ValueError('Code analysis did not finish successfully.')
-            driver = run['tool']['driver']
-            rules = {rule['id']: rule for rule in driver.get('rules', [])}
+            tool = run['tool']
+            driver = tool['driver']
+            components = [driver, *tool.get('extensions', [])]
+            rules = {
+                rule['id']: rule
+                for component in components
+                for rule in component.get('rules', [])
+            }
             results = run.get('results', [])
             if not isinstance(results, list):
                 raise ValueError('Invalid analysis results.')
@@ -32,7 +38,7 @@ def check(directory):
                 if not rule_id and 'ruleIndex' in result:
                     rule_id = driver['rules'][result['ruleIndex']]['id']
                 if rule_id not in rules:
-                    raise ValueError('A finding references an unknown analysis rule.')
+                    raise ValueError(f'A finding references unknown analysis rule {rule_id!r}.')
                 rule = rules[rule_id]
                 raw_score = rule.get('properties', {}).get('security-severity')
                 score = float(raw_score) if raw_score is not None else 0

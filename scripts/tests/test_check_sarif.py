@@ -34,6 +34,18 @@ class SecurityGateTests(unittest.TestCase):
         self.report([None], [{'ruleIndex': 0, 'level': 'error'}])
         self.assertEqual(gate.check(self.root), 1)
 
+    def test_extension_rule_severity_is_checked(self):
+        self.report([])
+        path = self.root/'python.sarif'
+        document = json.loads(path.read_text())
+        run = document['runs'][0]
+        run['tool']['extensions'] = [{'name': 'query-pack', 'rules': [
+            {'id': 'external/high', 'properties': {'security-severity': '8.1'}},
+        ]}]
+        run['results'] = [{'ruleId': 'external/high'}]
+        path.write_text(json.dumps(document))
+        self.assertEqual(gate.check(self.root), 1)
+
     def test_rule_default_error_level_is_checked(self):
         self.report([])
         path = self.root/'python.sarif'
