@@ -52,6 +52,14 @@ class MonitoringAndSync(unittest.TestCase):
             with self.subTest(query_invalid=bad_query.endswith('%2')),self.assertRaises(ValueError):
                 monitoring.safe_request_target(bad_path,bad_query)
 
+    def test_request_target_handles_repeated_slashes_from_codeql_alert(self):
+        path = '/' * 100000
+        query = 'next=' + '/' * 100000
+        self.assertEqual(monitoring.safe_request_target(path,query),path+'?'+query)
+        for bad_path,bad_query in ((path+'%',query),(path,query+'%2G')):
+            with self.subTest(query_invalid=bad_query.endswith('%2G')),self.assertRaises(ValueError):
+                monitoring.safe_request_target(bad_path,bad_query)
+
     def test_classification_dns_policy_and_no_rebinding(self):
         self.assertEqual(monitoring.classify(200)[0],'up')
         self.assertEqual(monitoring.classify(401)[0],'up')

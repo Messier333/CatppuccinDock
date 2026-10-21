@@ -17,10 +17,12 @@ MAX_MONITORS = 1000
 _queue_lock = RLock()
 _executor = None
 _jobs = {}
-# A single repeated character class avoids backtracking between URI alternatives.
-# Percent escapes are validated separately below, in one linear pass.
-_SAFE_REQUEST_TARGET = re.compile(
-    r"/[A-Za-z0-9._~!$&'()*+,;=:@/?%\-]*\Z"
+# Match only the fixed origin-form prefix, with no repetition or backtracking.
+# Keeping this guard explicit also lets CodeQL recognize URL validation.
+_ORIGIN_FORM_PREFIX = re.compile(r'\A/')
+# Validate every character and percent escape in a single linear pass below.
+_REQUEST_TARGET_CHARACTERS = frozenset(
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._~!$&'()*+,;=:@/?%-"
 )
 _HEX_DIGITS = frozenset('0123456789ABCDEFabcdef')
 
@@ -42,10 +44,12 @@ def safe_request_target(path, query=''):
     path = quote(path or '/', safe="/:@!$&'()*+,;=-._~%")
     query = quote(query, safe="/?:@!$&'()*+,;=-._~%")
     target = path + ('?' + query if query else '')
-    if not _SAFE_REQUEST_TARGET.fullmatch(target):
+    if not _ORIGIN_FORM_PREFIX.match(target):
         raise ValueError('Invalid URL path or query')
     index = 0
     while index < len(target):
+        if target[index] not in _REQUEST_TARGET_CHARACTERS:
+            raise ValueError('Invalid URL path or query')
         if target[index] == '%':
             if index + 2 >= len(target) or target[index + 1] not in _HEX_DIGITS or target[index + 2] not in _HEX_DIGITS:
                 raise ValueError('Invalid URL path or query')
