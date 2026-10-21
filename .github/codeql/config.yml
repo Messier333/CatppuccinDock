@@ -2,7 +2,7 @@ name: CatppuccinDock security
 paths:
   - backend/app
   - frontend/src
-  - frontend/public/sw.js
+  - frontend/public
 paths-ignore:
   - backend/app/data/iconsets
 queries:
