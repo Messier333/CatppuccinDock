@@ -1,4 +1,5 @@
 import json
+import os
 from io import BytesIO
 from pathlib import Path
 import subprocess
@@ -19,6 +20,10 @@ from app.services.media.remote_media import RemoteMediaError
 SLUG='pixel-art-forest-abcd1234'
 GIFDB=f'<a href="/gif/{SLUG}.html"><img src="/images/thumbnail/{SLUG}.gif" alt="Pixel Forest GIF"></a>'
 VIDEO={'id':125,'tags':'forest, night','user':'Artist','duration':12,'videos':{'tiny':{'url':'https://cdn.pixabay.com/video/2025/01/01/125.mp4','thumbnail':'https://cdn.pixabay.com/video/2025/01/01/125.jpg','width':640,'height':360}}}
+
+def create_video_fixture(path):
+ subprocess.run(['ffmpeg','-nostdin','-v','error','-f','lavfi','-i','testsrc2=size=160x90:rate=10','-t','2','-c:v','mpeg4','-threads','1',str(path)],check=True)
+ return path.read_bytes()
 
 class MediaProvidersTests(unittest.TestCase):
  setUp=auth_tests.AuthenticationTests.setUp
@@ -79,7 +84,7 @@ class MediaProvidersTests(unittest.TestCase):
  def test_video_converts_to_animated_local_gif_without_network(self):
   with TemporaryDirectory() as directory:
    path=Path(directory)/'fixture.mp4'
-   subprocess.run(['ffmpeg','-nostdin','-v','error','-f','lavfi','-i','testsrc2=size=160x90:rate=10','-t','2','-c:v','mpeg4','-threads','1',str(path)],check=True)
+   create_video_fixture(path)
    output=prepare_video(path.read_bytes())
    self.key()
    source=pixabay_gifs.item(VIDEO)['source']
@@ -97,3 +102,14 @@ class MediaProvidersTests(unittest.TestCase):
    durations=[]
    for index in range(image.n_frames):image.seek(index);durations.append(image.info['duration'])
    self.assertEqual(sum(durations),2000)
+ def test_video_conversion_is_bounded_without_changing_parent_heap_settings(self):
+  with TemporaryDirectory() as directory:
+   video=create_video_fixture(Path(directory)/'fixture.mp4')
+  with patch.dict(os.environ,{'MALLOC_ARENA_MAX':'64'}):
+   for attempt in range(4):
+    with self.subTest(attempt=attempt):
+     with Image.open(BytesIO(prepare_video(video))) as image:
+      self.assertEqual(image.size,(160,90))
+      self.assertGreater(image.n_frames,1)
+      self.assertEqual(image.info['loop'],0)
+    self.assertEqual(os.environ['MALLOC_ARENA_MAX'],'64')

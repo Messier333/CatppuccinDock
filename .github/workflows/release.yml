@@ -1,0 +1,55 @@
+name: Create release
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: Create GitHub release
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Prepare deployment assets and instructions
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: python3 scripts/prepare_release.py --tag "$RELEASE_TAG" --repository "$GITHUB_REPOSITORY" --output "$RUNNER_TEMP/release"
+
+      - name: Create release with generated notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" --json tagName >/dev/null 2>&1; then
+            printf 'Release %s already exists; keeping its notes.\n' "$RELEASE_TAG"
+            exit 0
+          fi
+
+          options=(--verify-tag --generate-notes --title "$RELEASE_TAG" --notes-file "$RUNNER_TEMP/release/release-notes.md")
+          # A prerelease suffix comes before optional SemVer build metadata.
+          version="${RELEASE_TAG%%+*}"
+          if [[ "$version" == *-* ]]; then
+            options+=(--prerelease --latest=false)
+          else
+            options+=(--latest)
+          fi
+
+          gh release create "$RELEASE_TAG" \
+            "$RUNNER_TEMP/release/CatppuccinDock-${RELEASE_TAG}-deploy.tar.gz" \
+            "$RUNNER_TEMP/release/docker-compose.yml" \
+            "$RUNNER_TEMP/release/.env.example" \
+            "$RUNNER_TEMP/release/SHA256SUMS" \
+            "${options[@]}"

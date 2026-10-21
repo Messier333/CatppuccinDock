@@ -10,7 +10,7 @@ Docker Engine·Docker Compose V2 2.23.1 이상·OpenSSL·wget이 필요합니다
 
 `docker-compose.yml`에는 로컬 빌드가 없고 Garage 설정도 내장되어 있습니다. 별도 소스·Python·설정 파일 다운로드 없이 네 서비스를 기동하며 DB·스토리지 볼륨과 로그 디렉터리는 자동 생성합니다. DB·Garage 포트는 내부 네트워크에서 사용하고 포털 포트만 외부에 공개합니다.
 
-정식 버전으로 설치하려면 해당 GitHub 릴리즈 본문의 명령어를 사용하세요. 릴리즈에 첨부된 환경변수 예시는 그 버전에 고정되어 있습니다.
+빠른 설치는 `IMAGE_TAG=latest`로 실행합니다. 특정 릴리즈 버전을 고정하고 싶을 때만 해당 릴리즈의 ‘직접 설정해서 배포’ 안내나 첨부 파일을 사용하세요. 첨부된 환경변수 예시에만 해당 버전이 지정되어 있습니다.
 
 ## 직접 설정해서 배포
 
@@ -77,16 +77,22 @@ ghcr.io/messier333/catppuccindock-frontend
 ghcr.io/messier333/catppuccindock-backend
 ```
 
-`latest`는 main의 테스트를 통과한 이미지입니다. 특정 정식 버전을 운영하려면 `.env`의 `IMAGE_TAG`를 변경한 뒤 실행합니다.
+`latest`는 main의 테스트를 통과한 이미지입니다. 일반 업데이트는 설치 명령을 반복하지 않고 기존 디렉터리에서 다음 명령만 실행합니다. `IMAGE_TAG=latest`는 그대로 두고 새 이미지를 받습니다.
 
 ```bash
+cd ~/catppuccindock
 docker compose pull backend frontend
 docker compose up -d
+docker compose ps
 ```
+
+새 이미지는 `pull`로 받아야 적용됩니다. 비밀번호·암호화 키 생성이나 최초 관리자 설정을 다시 할 필요가 없습니다. 특정 버전을 고정할 때만 `.env`의 `IMAGE_TAG`를 원하는 버전으로 변경합니다.
 
 프론트·백엔드에 같은 태그를 적용하며 `sha-<40자리 SHA>`로 커밋을 지정할 수도 있습니다. 포크는 `GHCR_IMAGE_PREFIX`를 소문자 소유자/저장소 이름으로 변경합니다. Infisical 사용 시 저장소의 버전을 변경하고 위 두 명령에 각각 CLI 주입을 적용합니다.
 
-기존 설치에서 업데이트할 때는 시크릿·암호화 키를 유지하고 DB·Garage를 함께 백업합니다. 동일한 Compose 프로젝트 이름을 사용하면 기존 볼륨을 재사용합니다. Compose 파일을 갱신할 때는 별도로 지정한 설정을 먼저 비교하세요. [스토리지 백업](storage.md)
+기존 설치에서 업데이트할 때는 시크릿·암호화 키를 유지하고 DB·Garage를 함께 백업합니다. 동일한 Compose 프로젝트 이름을 사용하면 기존 볼륨을 재사용합니다. Compose 구성이 바뀐 릴리즈에서만 새 파일을 받아 별도로 지정한 설정과 비교해 반영합니다. `.env`는 다시 내려받거나 덮어쓰지 않습니다. [스토리지 백업](storage.md)
+
+앱 업데이트 명령은 DB·Garage 엔진을 새 버전으로 바꾸지 않습니다. 엔진 갱신은 [DB·Garage 업데이트](storage.md#dbgarage-업데이트)에서 패치·메이저 변경을 구분해 진행합니다.
 
 ## 소스에서 빌드·개발
 
@@ -103,7 +109,18 @@ docker compose -f docker-compose.yml -f compose.build.yml up --build -d --wait
 
 ## GitHub Actions·GHCR 공개 설정
 
-[containers.yml](../.github/workflows/containers.yml)은 공개 파일 검사·시크릿 초기화/릴리즈 파일 테스트·Compose 검증·프론트 테스트·이미지 빌드와 별도 SQLite DB의 백엔드 테스트를 실행합니다. 모두 성공하면 AMD64·ARM64 이미지를 게시합니다.
+[containers.yml](../.github/workflows/containers.yml)은 실행 조건과 순서만 관리하며, 역할별 재사용 워크플로를 호출합니다.
+
+| 파일 | 역할 |
+| --- | --- |
+| [containers.yml](../.github/workflows/containers.yml) | PR·main·태그 이벤트 수신, 검증 → 이미지 게시 → 릴리즈 순서 관리 |
+| [checks.yml](../.github/workflows/checks.yml) | 설정 검사·프론트·백엔드 테스트를 서로 독립된 세 작업으로 병렬 실행 |
+| [publish-images.yml](../.github/workflows/publish-images.yml) | AMD64·ARM64 프론트·백엔드 이미지를 GHCR에 게시 |
+| [release.yml](../.github/workflows/release.yml) | 버전별 배포 파일·본문 준비, GitHub 릴리즈 생성 |
+
+검증에는 공개 파일 검사·시크릿 초기화/릴리즈 파일 테스트·Compose 검증·프론트 테스트와 이미지 빌드·별도 SQLite DB의 백엔드 테스트가 포함됩니다. 세 검증 작업이 모두 통과해야 이미지를 게시하고, 두 이미지 게시가 모두 성공해야 태그의 릴리즈를 생성합니다.
+
+재사용 파일은 `workflow_call`로만 실행합니다. 같은 커밋의 파일과 실행 컨텍스트를 공유하고, 별도 `workflow_run`으로 연결하지 않아 main·태그·PR의 결과가 섞이지 않습니다. 동시 실행 관리는 진입점에만 둡니다. [GitHub 재사용 워크플로 안내](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows)
 
 | 실행 조건 | 이미지 태그·릴리즈 |
 | --- | --- |

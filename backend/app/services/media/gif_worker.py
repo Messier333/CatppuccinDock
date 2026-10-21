@@ -2,6 +2,7 @@
 import json
 import math
 import mmap
+import os
 from pathlib import Path
 import resource
 import subprocess
@@ -148,15 +149,18 @@ def convert_video(root):
     source=root/'input.gif'
     converted=root/'converted.gif'
     palette=root/'palette.png'
+    # glibc's per-thread arenas can exhaust the inherited address-space limit
+    # even for tiny videos. Bound decoder heap reservations, not just threads.
+    decoder_env={**os.environ,'MALLOC_ARENA_MAX':'1'}
     common=['ffmpeg','-cpucount','1','-nostdin','-v','error','-y','-max_alloc','67108864',
             '-threads','1','-filter_threads','1','-filter_complex_threads','1',
             '-protocol_whitelist','file,pipe','-f','mov','-enable_drefs','0','-use_absolute_path','0','-i',str(source)]
     scale="fps=10,scale=w='min(640,iw)':h='min(360,ih)':force_original_aspect_ratio=decrease"
     subprocess.run(common+['-t','20','-an','-vf',scale+',palettegen=max_colors=96','-frames:v','1','-threads','1',str(palette)],
-                   stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True,timeout=25)
+                   stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True,timeout=25,env=decoder_env)
     subprocess.run(common+['-threads','1','-i',str(palette),'-t','20','-an','-lavfi','[0:v]'+scale+'[x];[x][1:v]paletteuse=dither=bayer',
                           '-loop','0','-threads','1',str(converted)],
-                   stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True,timeout=25)
+                   stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True,timeout=25,env=decoder_env)
     converted.replace(source)
     result=optimize(root)
     if not result['optimized']:

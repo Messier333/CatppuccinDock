@@ -47,14 +47,20 @@ docker compose up -d
 
 ## 업데이트
 
-기존 설치 디렉터리에서 실행합니다. 버전을 지정해서 운영한다면 먼저 `.env`의 `IMAGE_TAG`를 원하는 버전으로 변경하세요.
+최초 설치 명령을 반복할 필요 없이 기존 설치 디렉터리에서 실행합니다. 기본 `IMAGE_TAG=latest`는 그대로 두고 새 이미지를 내려받습니다.
 
 ```bash
+cd ~/catppuccindock
 docker compose pull backend frontend
 docker compose up -d
+docker compose ps
 ```
 
-업데이트할 때 기존 `.env`와 암호화 키를 유지합니다. [DB·Garage 백업](docs/storage.md)도 함께 보관하세요.
+기존 `.env`·비밀번호·암호화 키·데이터 볼륨을 유지합니다. 시크릿 생성 명령은 다시 실행하지 않습니다. 업데이트 전 [DB·Garage 백업](docs/storage.md)을 보관하세요. 특정 버전을 운영할 때만 `.env`의 `IMAGE_TAG`를 원하는 값으로 바꿉니다.
+
+Compose 구성 변경이 안내된 업데이트에서만 새 Compose 파일을 받아 기존 설정과 비교해 반영합니다. Infisical 사용 시에는 [동일한 시크릿 주입을 적용한 업데이트 명령](docs/secrets.md#업데이트와-키-변경)을 사용하세요.
+
+DB·Garage 엔진을 갱신할 때는 [별도의 DB·스토리지 업데이트 절차](docs/storage.md#dbgarage-업데이트)를 따릅니다. PostgreSQL 메이저 변경은 데이터 이전이 필요합니다.
 
 ## 소스에서 빌드
 
@@ -67,7 +73,7 @@ docker compose -f docker-compose.yml -f compose.build.yml up --build -d --wait
 
 ## GitHub Actions·릴리즈
 
-`main` 푸시 시 테스트 후 AMD64·ARM64 이미지를 GHCR에 게시합니다. `v1.0.0` 같은 버전 태그에서는 이미지 게시 성공 후 GitHub 릴리즈·변경 내역·배포 안내·첨부 파일을 생성합니다. PR에서는 검증만 실행합니다.
+`main` 푸시 시 테스트 후 AMD64·ARM64 이미지를 GHCR에 게시합니다. `v1.0.0` 같은 버전 태그에서는 이미지 게시 성공 후 GitHub 릴리즈·변경 내역·배포 안내·첨부 파일을 생성합니다. PR에서는 검증만 실행합니다. 워크플로는 실행 순서·검증·이미지 게시·릴리즈 파일로 분리하며, 설정 검사·프론트·백엔드 테스트는 병렬로 실행합니다.
 
 ## 디렉터리
 
