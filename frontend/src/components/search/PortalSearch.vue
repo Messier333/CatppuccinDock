@@ -31,7 +31,8 @@ const opener = document.activeElement;
 onMounted(async () => { dialog.value.showModal(); await nextTick(); input.value.focus(); });
 onBeforeUnmount(() => { clearTimeout(timer); request?.abort(); generation++; dialog.value?.close(); opener?.focus(); });
 function close() { emit('close'); }
-function canComplete(text) { return text.length >= 2 && text.length <= 120 && !/[.\/:@?#\\\x00-\x1f]/.test(text) && !text.toLowerCase().startsWith('localhost'); }
+// eslint-disable-next-line no-control-regex -- Control characters must never be sent to suggestion providers.
+function canComplete(text) { return text.length >= 2 && text.length <= 120 && !/[./:@?#\\\x00-\x1f]/.test(text) && !text.toLowerCase().startsWith('localhost'); }
 watch([query, provider], () => {
   active.value = -1; limit.value = 8; suggestions.value = [];
   clearTimeout(timer); request?.abort(); generation++;

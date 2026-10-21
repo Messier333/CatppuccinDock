@@ -2,7 +2,6 @@ import time
 import unittest
 from unittest.mock import patch, AsyncMock
 from fastapi.testclient import TestClient
-from sqlalchemy import select
 import test_auth as legacy
 from test_auth import HEADERS
 from app.main import app

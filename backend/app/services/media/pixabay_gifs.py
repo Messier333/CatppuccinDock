@@ -6,7 +6,7 @@ import time
 from urllib.parse import urlencode, urlsplit
 
 from fastapi import HTTPException
-from sqlalchemy import delete, select
+from sqlalchemy import select
 
 from app.db.models import Setting
 from app.db.session import SessionLocal

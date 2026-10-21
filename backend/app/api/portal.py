@@ -1,10 +1,8 @@
-from copy import deepcopy
-
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import delete, func, select
+from sqlalchemy import func, select
 
 from app.api.dependencies import require_mutation_header, require_user
-from app.db.models import BackgroundImage, Bookmark, BookmarkVisit, Category, Setting, SharedPlacement, Tab, User
+from app.db.models import BackgroundImage, Bookmark, BookmarkVisit, Category, Setting, Tab, User
 from app.services.preferences import apply_preferences
 from app.db.session import SessionLocal
 from app.schemas.portal import BookmarkData, CategoryData, ReorderData, TabData

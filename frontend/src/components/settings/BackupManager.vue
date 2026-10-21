@@ -3,7 +3,7 @@ import { computed,ref } from 'vue';
 import ThemeSelect from '../common/ThemeSelect.vue';
 import { api } from '../../lib/api.js';
 import { appUrl } from '../../lib/navigation.js';
-const props=defineProps({isAdmin:Boolean});
+defineProps({isAdmin:Boolean});
 const encrypted=ref(true),exportPassword=ref(''),confirmation=ref(''),includeImages=ref(true),includeSettings=ref(false),importPassword=ref(''),document=ref(null),preview=ref(null),kind=ref('backup'),mode=ref('merge'),applySettings=ref(false),selected=ref([]),query=ref(''),busy=ref(false),error=ref(''),notice=ref(''),undoId=ref('');
 const visible=computed(()=>preview.value?.entries.filter(item=>`${item.name} ${item.url} ${item.path}`.toLowerCase().includes(query.value.toLowerCase()))||[]);
 function download(data,name){const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const anchor=window.document.createElement('a');anchor.href=url;anchor.download=name;anchor.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}

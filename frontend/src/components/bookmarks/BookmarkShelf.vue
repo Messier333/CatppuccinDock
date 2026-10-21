@@ -7,7 +7,7 @@ import { api } from '../../lib/api.js';
 import { bookmarkColor } from '../../lib/bookmarkColors.js';
 import { recordBookmarkVisit } from '../../lib/bookmarkActivity.js';
 const props = defineProps({portal:Object,statuses:{type:Object,default:()=>({})}});
-const emit = defineEmits(['layout-change']);
+const emit = defineEmits(['layout-change','clear-recent']);
 const collapsed = defineModel('collapsed',{type:Boolean,default:false});
 const iconsOnly = computed(() => props.portal.bookmarkShelfDisplay === 'icons');
 const links = ref(null), canPrevious = ref(false), canNext = ref(false), stripId = useId();
@@ -59,7 +59,7 @@ async function toggle(id) {
   catch (cause) { link.favorite = previous; error.value = cause.message; } finally { busy.value = ''; }
 }
 function manage() { query.value = ''; limit.value = 60; dialog.value.showModal(); }
-async function clearRecent() { try { await api('bookmark-tools/recent',{method:'DELETE'}); props.portal.recentBookmarks = []; } catch (cause) { error.value = cause.message; } }
+async function clearRecent() { try { await api('bookmark-tools/recent',{method:'DELETE'}); emit('clear-recent'); } catch (cause) { error.value = cause.message; } }
 </script>
 <template><section class="bookmark-shelf" :class="{'shelf-collapsed':collapsed,'shelf-icons-only':iconsOnly}" aria-label="즐겨찾기와 최근 사용">
   <div class="bookmark-shelf-heading">

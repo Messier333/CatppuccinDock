@@ -70,6 +70,8 @@ REQUIRED_FILES = (
     'docs/publishing.md', 'deploy/garage/garage.toml', 'scripts/setup_storage.py',
     '.github/workflows/containers.yml', '.github/workflows/checks.yml',
     '.github/workflows/publish-images.yml', '.github/workflows/release.yml',
+    '.github/workflows/quality.yml', 'ruff.toml', 'requirements-lint.txt',
+    'frontend/eslint.config.js',
     '.github/dependabot.yml',
     'compose.build.yml', 'docs/containers.md', 'scripts/init-env.sh',
     'docs/secrets.md',

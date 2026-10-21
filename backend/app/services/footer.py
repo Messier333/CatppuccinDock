@@ -2,7 +2,6 @@
 import http.client
 import json
 import math
-import secrets
 import socket
 import ssl
 import time

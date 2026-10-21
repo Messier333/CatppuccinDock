@@ -1,17 +1,16 @@
-from copy import deepcopy
 import io
 import unittest
 from unittest.mock import MagicMock, patch
 
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
-from sqlalchemy import inspect, select, text
+from sqlalchemy import inspect, text
 
 import test_auth as auth_tests
 from test_auth import HEADERS
 from test_backgrounds import gif
 from app.db.migrations import migrate
-from app.db.models import BackgroundImage, Tab
+from app.db.models import BackgroundImage
 from app.db.session import SessionLocal, engine
 from app.main import app
 from app.services.media import gif_search, remote_media

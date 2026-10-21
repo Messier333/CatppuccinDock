@@ -35,7 +35,7 @@ Infisical의 해당 프로젝트·환경에 아래 여섯 이름을 등록합니
 
 ```bash
 mkdir -p ~/catppuccindock && cd ~/catppuccindock
-wget -O docker-compose.yml https://raw.githubusercontent.com/Messier333/CatppuccinDock/main/docker-compose.yml
+wget -O docker-compose.yml https://raw.githubusercontent.com/overture-1928/CatppuccinDock/main/docker-compose.yml
 infisical login
 infisical sm run --projectId '<PROJECT_ID>' --env prod -- \
   docker compose --env-file /dev/null up -d

@@ -6,7 +6,8 @@ onMounted(async()=>{try{state.value=await api('admin/backgrounds');}catch(cause)
 async function save(){
   busy.value=true;error.value='';notice.value='';
   try{
-    const {has_pixabay_key,...config}=state.value;
+    const config={...state.value};
+    delete config.has_pixabay_key;
     state.value=await api('admin/backgrounds',{method:'PUT',body:JSON.stringify({...config,pixabay_key:key.value||null,clear_pixabay_key:clearKey.value})});
     key.value='';clearKey.value=false;notice.value='GIF 제공처와 사용 한도를 저장했어요.';
   }catch(cause){error.value=cause.message;}finally{busy.value=false;}

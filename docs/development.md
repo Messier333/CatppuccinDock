@@ -29,6 +29,27 @@ GitHub Actions는 PR에서 검증을 실행하고 `main`·버전 태그에서는
 
 API 계약은 [docs/api.md](api.md)를 참고하세요. 배포 전에는 DB·`.env`·Garage의 메타데이터/데이터 볼륨을 함께 백업하세요. [스토리지 운영 안내](storage.md)에 이관·백업 절차가 있습니다. 로컬 백업 디렉터리 `.local-backups/`는 버전 관리에서 제외됩니다.
 
+## 코드 품질 검사
+
+프로젝트 루트에서 실행합니다. 개발용 린터는 앱 런타임 의존성과 분리했습니다.
+
+```bash
+python3 -m pip install -r requirements-lint.txt
+ruff check backend scripts
+npm --prefix frontend ci
+npm --prefix frontend run lint
+```
+
+Python은 [ruff.toml](../ruff.toml)의 Ruff 규칙으로 문법 오류·정의되지 않은 이름·잘못된 구문·사용하지 않는 import를 검사합니다. JavaScript·Vue·서비스 워커·프론트 테스트는 [ESLint 설정](../frontend/eslint.config.js)의 권장 오류 규칙과 Vue essential 규칙을 적용합니다. 의도적으로 사용하지 않는 인자는 `_`로 시작하며, 규칙 예외는 필요한 줄에 이유를 명시합니다.
+
+GitHub Actions 파일은 actionlint와 실행기의 ShellCheck로 구문·표현식·재사용 워크플로 호출·셸 단계를 검사합니다. 로컬에서도 [공식 설치 방법](https://github.com/rhysd/actionlint/blob/main/docs/install.md)에 따라 actionlint 1.7.12와 ShellCheck를 설치한 뒤 실행할 수 있습니다.
+
+```bash
+actionlint
+```
+
+CI의 [quality.yml](../.github/workflows/quality.yml)은 세 검사를 병렬로 실행합니다. 하나라도 실패하면 테스트·이미지 게시·릴리즈 단계가 진행되지 않습니다. Ruff는 개발용 요구사항에, ESLint는 npm 잠금 파일에 버전을 고정합니다. actionlint 배포 파일은 고정 버전과 SHA-256을 확인한 후 실행합니다.
+
 ## Git에 올리기 전 확인
 
 ```bash

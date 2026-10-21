@@ -3,7 +3,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, ValidationError, field_validator
 from sqlalchemy import delete, select
 from app.api.dependencies import require_admin, require_mutation_header, require_user
-from app.db.models import Bookmark, ServiceMonitor, SharedPlacement, User
+from app.db.models import Bookmark, ServiceMonitor, User
 from app.db.session import SessionLocal
 from app.services.library import allowed_link_ids, shared_links_for_bookmarks
 from app.services.monitoring import MAX_MONITORS, queue_checks, run_check, run_batch

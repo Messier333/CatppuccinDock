@@ -1,5 +1,4 @@
 from typing import Literal
-from urllib.parse import urlsplit
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
 
 BASE_ITEMS = ['fastlink', 'tabs', 'weather', 'clock', 'theme', 'settings', 'logout', 'edit']

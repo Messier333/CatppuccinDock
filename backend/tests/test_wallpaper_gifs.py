@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from app.schemas.backgrounds import BackgroundImport, BackgroundSource
+from app.schemas.backgrounds import BackgroundImport
 from app.services.media import gif_search, wallpaper_gifs
 from app.services.media.remote_media import RemoteMediaError
 

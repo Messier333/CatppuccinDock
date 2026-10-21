@@ -3,7 +3,7 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { CloudSun, RefreshCw } from 'lucide-vue-next';
 import { api } from '../../lib/api.js';
 import WidgetPanel from './WidgetPanel.vue';
-const props = defineProps({ config: { type: Object, required: true } });
+defineProps({ config: { type: Object, required: true } });
 const weather = ref(null), loading = ref(false);
 let timer, disposed = false;
 async function load(manual = false) {

@@ -2,7 +2,7 @@
 import hashlib,secrets,time
 from fastapi import HTTPException
 from sqlalchemy import select
-from app.db.models import ProxySource, ProxySync, SharedLink
+from app.db.models import ProxySource, ProxySync
 from app.db.session import SessionLocal
 from app.schemas.proxy import PreviewData
 from app.services.proxy import fetch_hosts, normalize_hosts, url_key

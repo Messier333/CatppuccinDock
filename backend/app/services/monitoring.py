@@ -7,7 +7,6 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from threading import BoundedSemaphore, RLock
 from urllib.parse import urlsplit
-from fastapi import HTTPException
 from sqlalchemy import select
 from app.db.models import ServiceMonitor
 from app.db.session import SessionLocal

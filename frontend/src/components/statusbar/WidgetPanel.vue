@@ -1,7 +1,7 @@
 <script setup>
 import { nextTick, onBeforeUnmount, ref } from 'vue';
 import { activateWidgetPanel, releaseWidgetPanel } from '../../lib/widgetPanels.js';
-const props = defineProps({ label: { type: String, required: true } });
+defineProps({ label: { type: String, required: true } });
 const root = ref(null), panel = ref(null), open = ref(false), pinned = ref(false), position = ref({});
 let restoringFocus = false, revealVersion = 0;
 function place() {

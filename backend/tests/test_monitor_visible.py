@@ -5,7 +5,7 @@ from threading import Event, Lock
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
-from sqlalchemy import select, text
+from sqlalchemy import text
 
 import test_auth as legacy
 from test_auth import HEADERS

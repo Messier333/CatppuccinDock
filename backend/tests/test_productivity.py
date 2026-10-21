@@ -1,13 +1,12 @@
-import time
 import unittest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
-from sqlalchemy import select, text
+from sqlalchemy import text
 import test_auth as legacy
 from test_auth import HEADERS
 from app.main import app
 from app.db.migrations import migrate
-from app.db.models import Bookmark, BookmarkVisit, PersonalPreference, SharedLink, SharedPlacement
+from app.db.models import Bookmark, BookmarkVisit, SharedLink, SharedPlacement
 from app.db.session import SessionLocal, engine
 from app.services import bookmark_metadata
 

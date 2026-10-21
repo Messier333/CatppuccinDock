@@ -10,7 +10,7 @@ import CalendarClock from './CalendarClock.vue';
 import WeatherWidget from './WeatherWidget.vue';
 import MetricWidget from './MetricWidget.vue';
 import favicon from '../../assets/favicon.png';
-const props = defineProps({ portal: { type: Object, required: true }, activeTab: Number, now: Date });
+defineProps({ portal: { type: Object, required: true }, activeTab: Number, now: Date });
 const emit = defineEmits(['select-tab']);
 const editing = defineModel('editing', { default: false });
 const { theme, toggleTheme } = useTheme();

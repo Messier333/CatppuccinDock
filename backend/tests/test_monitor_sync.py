@@ -1,12 +1,11 @@
 import time,unittest
 from unittest.mock import patch
 from fastapi import HTTPException
-from sqlalchemy import select
 import test_auth as legacy
 from test_auth import HEADERS
-from app.db.models import Bookmark,ProxySource,ProxySync,ServiceMonitor,SharedLink
+from app.db.models import ProxySync,ServiceMonitor
 from app.db.session import SessionLocal
-from app.services import monitoring, proxy_sync
+from app.services import monitoring
 
 class MonitoringAndSync(unittest.TestCase):
     setUp=legacy.AuthenticationTests.setUp

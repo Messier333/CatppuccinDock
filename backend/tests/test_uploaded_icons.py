@@ -8,7 +8,6 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 from PIL import Image
-from sqlalchemy import select
 
 import test_auth as legacy
 from test_auth import HEADERS

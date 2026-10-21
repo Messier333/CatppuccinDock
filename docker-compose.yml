@@ -40,7 +40,7 @@ services:
     restart: unless-stopped
 
   backend:
-    image: ${GHCR_IMAGE_PREFIX:-ghcr.io/messier333/catppuccindock}-backend:${IMAGE_TAG:-latest}
+    image: ${GHCR_IMAGE_PREFIX:-ghcr.io/overture-1928/catppuccindock}-backend:${IMAGE_TAG:-latest}
     environment:
       POSTGRES_HOST: database
       ADMIN_SETUP_CODE: ${ADMIN_SETUP_CODE:?Set ADMIN_SETUP_CODE in .env or the process environment}
@@ -75,7 +75,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: ${GHCR_IMAGE_PREFIX:-ghcr.io/messier333/catppuccindock}-frontend:${IMAGE_TAG:-latest}
+    image: ${GHCR_IMAGE_PREFIX:-ghcr.io/overture-1928/catppuccindock}-frontend:${IMAGE_TAG:-latest}
     ports:
       - "${PORTAL_PORT:-8090}:80"
     volumes:

@@ -5,7 +5,7 @@ from sqlalchemy import select,func,delete
 import test_auth as legacy
 from test_auth import HEADERS
 from app.main import app
-from app.db.models import Bookmark,ServiceMonitor,Setting,SharedLink,SharedPlacement
+from app.db.models import ServiceMonitor,SharedLink,SharedPlacement
 from app.db.session import SessionLocal
 from app.services import monitoring
 

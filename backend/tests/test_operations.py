@@ -1,15 +1,12 @@
-import base64,json,time,unittest
+import base64,time,unittest
 from io import BytesIO
-from unittest.mock import patch
 from PIL import Image
 from fastapi.testclient import TestClient
-from sqlalchemy import select
 import test_auth as legacy
 from test_auth import HEADERS
-from app.db.models import Bookmark, Category, GroupMember, OperationPreview, SharedLink, SharedPlacement, Tab, TrashItem
+from app.db.models import SharedLink, TrashItem
 from app.db.session import SessionLocal
 from app.main import app
-from app.services import backups
 
 class Operations(unittest.TestCase):
     setUp=legacy.AuthenticationTests.setUp

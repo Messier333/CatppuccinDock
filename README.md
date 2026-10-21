@@ -18,8 +18,8 @@ mkdir -p ~/catppuccindock && cd ~/catppuccindock
 umask 077
 
 # 필수 파일 다운로드 (.env가 이미 있으면 보존)
-wget -O docker-compose.yml https://raw.githubusercontent.com/Messier333/CatppuccinDock/main/docker-compose.yml
-test -f .env || wget -O .env https://raw.githubusercontent.com/Messier333/CatppuccinDock/main/.env.example
+wget -O docker-compose.yml https://raw.githubusercontent.com/overture-1928/CatppuccinDock/main/docker-compose.yml
+test -f .env || wget -O .env https://raw.githubusercontent.com/overture-1928/CatppuccinDock/main/.env.example
 
 # 비어 있는 시크릿만 생성 (기존 값은 유지)
 for dock_key in POSTGRES_PASSWORD ADMIN_SETUP_CODE S3_SECRET_ACCESS_KEY GARAGE_RPC_SECRET; do
@@ -73,7 +73,9 @@ docker compose -f docker-compose.yml -f compose.build.yml up --build -d --wait
 
 ## GitHub Actions·릴리즈
 
-`main` 푸시 시 테스트 후 AMD64·ARM64 이미지를 GHCR에 게시합니다. `v1.0.0` 같은 버전 태그에서는 이미지 게시 성공 후 GitHub 릴리즈·변경 내역·배포 안내·첨부 파일을 생성합니다. PR에서는 검증만 실행합니다. 워크플로는 실행 순서·검증·이미지 게시·릴리즈 파일로 분리하며, 설정 검사·프론트·백엔드 테스트는 병렬로 실행합니다.
+`main` 푸시 시 테스트 후 AMD64·ARM64 이미지를 GHCR에 게시합니다. `v1.0.0` 같은 버전 태그에서는 이미지 게시 성공 후 GitHub 릴리즈·변경 내역·배포 안내·첨부 파일을 생성합니다. PR에서는 품질 검사와 검증만 실행합니다. 워크플로는 실행 순서·코드 품질·검증·이미지 게시·릴리즈 파일로 분리하며, 설정 검사·프론트·백엔드 테스트는 병렬로 실행합니다.
+
+Python Ruff·Vue/JavaScript ESLint·Actions actionlint 검사에 실패하면 후속 단계가 차단됩니다. [로컬 품질 검사 방법](docs/development.md#코드-품질-검사)
 
 ## 디렉터리
 

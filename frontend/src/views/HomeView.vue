@@ -182,7 +182,7 @@ watch(activeTabIndex, (index) => {
             </header>
 
             <p v-if="quickNotice" class="quick-add-notice" role="status">{{ quickNotice }}</p>
-            <BookmarkShelf v-if="!editing" v-model:collapsed="shelfCollapsed" :portal="startpage" :statuses="serviceStatus" @layout-change="shelfLayout++" />
+            <BookmarkShelf v-if="!editing" v-model:collapsed="shelfCollapsed" :portal="startpage" :statuses="serviceStatus" @layout-change="shelfLayout++" @clear-recent="startpage.recentBookmarks = []" />
 
             <div v-reorder="{ kind: 'categories', parentId: activeTab.id, disabled: !editing || reorderBusy }" class="startpage-categories">
               <section v-for="category in activeTab.categories" :key="category.id" :data-sort-id="category.id" class="startpage-category">

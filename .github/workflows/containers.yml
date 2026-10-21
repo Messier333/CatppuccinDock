@@ -16,8 +16,13 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  quality:
+    name: Code quality
+    uses: ./.github/workflows/quality.yml
+
   checks:
     name: Checks
+    needs: [quality]
     uses: ./.github/workflows/checks.yml
 
   publish:

@@ -1,6 +1,6 @@
 import time
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from app.api.dependencies import require_mutation_header, require_user
 from app.db.models import TrashItem, User
 from app.db.session import SessionLocal

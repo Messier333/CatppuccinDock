@@ -3,12 +3,11 @@ from unittest.mock import AsyncMock, patch
 
 import httpx
 from fastapi.testclient import TestClient
-from sqlalchemy import select
 
 import test_auth as legacy_tests
 from test_auth import HEADERS
 from app.api import search
-from app.db.models import Bookmark, SharedLink, SharedPlacement
+from app.db.models import SharedLink, SharedPlacement
 from app.db.session import SessionLocal
 from app.main import app
 

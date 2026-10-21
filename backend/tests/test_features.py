@@ -1,7 +1,5 @@
-import os
 import time
 import unittest
-from unittest.mock import patch
 
 import pyotp
 from fastapi.testclient import TestClient
@@ -9,7 +7,7 @@ from sqlalchemy import func, select
 
 import test_auth as legacy_tests
 from test_auth import CREDENTIALS, HEADERS
-from app.services.auth import COOKIE_NAME, MFA_COOKIE
+from app.services.auth import COOKIE_NAME
 from app.db.session import Base, SessionLocal, engine
 from app.main import app
 from app.db.migrations import migrate
