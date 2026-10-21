@@ -3,7 +3,6 @@ import http.client
 import json
 import math
 import socket
-import ssl
 import time
 from urllib.parse import urlencode, urlsplit
 from cryptography.fernet import InvalidToken
@@ -13,7 +12,7 @@ from app.core.security import cipher
 from app.db.models import FooterMetric, Setting
 from app.db.session import SessionLocal
 from app.schemas.footer import BASE_ITEMS, REQUIRED_ITEMS
-from app.services.monitoring import safe_addresses
+from app.services.monitoring import pinned_http_connection, safe_addresses, secure_tls_context
 
 
 class AuthenticationFailure(ValueError):
@@ -54,8 +53,8 @@ def json_request(url, private, token=''):
     try:
         sock = socket.create_connection((addresses[0], port), timeout=6)
         if parsed.scheme == 'https':
-            sock = ssl.create_default_context().wrap_socket(sock, server_hostname=host)
-        connection = http.client.HTTPConnection(host, port, timeout=6)
+            sock = secure_tls_context().wrap_socket(sock, server_hostname=host)
+        connection = pinned_http_connection()
         connection.sock = sock
         path = parsed.path or '/'
         if parsed.query: path += '?' + parsed.query

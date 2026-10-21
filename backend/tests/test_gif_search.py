@@ -223,8 +223,8 @@ class PublicMediaTests(unittest.TestCase):
         context = MagicMock(); context.wrap_socket.return_value = sock
         with patch('app.services.media.remote_media.safe_addresses', return_value=['93.184.216.34']) as dns, \
                 patch('app.services.media.remote_media.socket.create_connection', return_value=sock) as connect, \
-                patch('app.services.media.remote_media.ssl.create_default_context', return_value=context), \
-                patch('app.services.media.remote_media.http.client.HTTPConnection') as connection:
+                patch('app.services.media.remote_media.secure_tls_context', return_value=context), \
+                patch('app.services.media.remote_media.pinned_http_connection') as connection:
             connection.return_value.getresponse.return_value = response()
             self.assertEqual(remote_media.fetch_public('https://example.org/x.gif', max_bytes=100, accept='image/gif'), b'GIF89a;')
             self.assertEqual(connect.call_args.args[0], ('93.184.216.34', 443))

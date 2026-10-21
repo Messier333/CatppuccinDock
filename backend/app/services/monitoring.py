@@ -18,6 +18,17 @@ _executor = None
 _jobs = {}
 
 
+def secure_tls_context():
+    context = ssl.create_default_context()
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
+    return context
+
+
+def pinned_http_connection():
+    """Build an HTTP formatter whose destination comes only from its pinned socket."""
+    return http.client.HTTPConnection('192.0.2.1', 1)
+
+
 def start():
     global _executor
     with _queue_lock:
@@ -85,8 +96,8 @@ def check_url(url, allow_private=False):
         addresses=safe_addresses(host,port,allow_private)
         # Resolve once, validate all answers, and connect only to an approved IP.
         sock=socket.create_connection((addresses[0],port),timeout=3)
-        if parsed.scheme=='https':sock=ssl.create_default_context().wrap_socket(sock,server_hostname=host)
-        connection=http.client.HTTPConnection(host,port,timeout=3);connection.sock=sock
+        if parsed.scheme=='https':sock=secure_tls_context().wrap_socket(sock,server_hostname=host)
+        connection=pinned_http_connection();connection.sock=sock
         path=parsed.path or '/'
         if parsed.query:path+='?'+parsed.query
         host_header=('['+host+']' if ':' in host else host)+((':'+str(parsed.port)) if parsed.port else '')
@@ -94,8 +105,8 @@ def check_url(url, allow_private=False):
             if method=='GET':
                 connection.close()
                 sock=socket.create_connection((addresses[0],port),timeout=3)
-                if parsed.scheme=='https':sock=ssl.create_default_context().wrap_socket(sock,server_hostname=host)
-                connection=http.client.HTTPConnection(host,port,timeout=3);connection.sock=sock
+                if parsed.scheme=='https':sock=secure_tls_context().wrap_socket(sock,server_hostname=host)
+                connection=pinned_http_connection();connection.sock=sock
             connection.putrequest(method,path,skip_host=True,skip_accept_encoding=True)
             connection.putheader('Host',host_header);connection.putheader('User-Agent','CatppuccinDock-Status/1.0');connection.putheader('Connection','close');connection.endheaders()
             response=connection.getresponse();status=response.status;location=response.getheader('Location','')

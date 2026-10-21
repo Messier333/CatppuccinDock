@@ -1,11 +1,9 @@
 """Bounded HTTPS downloads with pinned public DNS and no user credentials."""
-import http.client
 import socket
-import ssl
 import time
 from urllib.parse import urljoin, urlsplit
 
-from app.services.monitoring import safe_addresses
+from app.services.monitoring import pinned_http_connection, safe_addresses, secure_tls_context
 
 
 class RemoteMediaError(ValueError):
@@ -39,8 +37,8 @@ def fetch_public(url, *, max_bytes, accept, timeout=15, on_chunk=None):
         sock = socket.create_connection((addresses[0], 443), timeout=min(4, remaining))
         connection = None
         try:
-            sock = ssl.create_default_context().wrap_socket(sock, server_hostname=parsed.hostname)
-            connection = http.client.HTTPConnection(parsed.hostname, 443)
+            sock = secure_tls_context().wrap_socket(sock, server_hostname=parsed.hostname)
+            connection = pinned_http_connection()
             connection.sock = sock
             path = (parsed.path or '/') + ('?' + parsed.query if parsed.query else '')
             connection.putrequest('GET', path, skip_host=True, skip_accept_encoding=True)

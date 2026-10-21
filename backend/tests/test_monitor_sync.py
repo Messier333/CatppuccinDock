@@ -1,4 +1,4 @@
-import time,unittest
+import ssl,time,unittest
 from unittest.mock import patch
 from fastapi import HTTPException
 import test_auth as legacy
@@ -11,6 +11,12 @@ class MonitoringAndSync(unittest.TestCase):
     setUp=legacy.AuthenticationTests.setUp
     tearDown=legacy.AuthenticationTests.tearDown
     setup_owner=legacy.AuthenticationTests.setup_owner
+    def test_outbound_http_transport_uses_pinned_socket_and_modern_tls(self):
+        connection=monitoring.pinned_http_connection()
+        self.addCleanup(connection.close)
+        self.assertEqual((connection.host,connection.port),('192.0.2.1',1))
+        self.assertEqual(monitoring.secure_tls_context().minimum_version,ssl.TLSVersion.TLSv1_2)
+
     def test_classification_dns_policy_and_no_rebinding(self):
         self.assertEqual(monitoring.classify(200)[0],'up')
         self.assertEqual(monitoring.classify(401)[0],'up')

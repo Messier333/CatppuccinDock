@@ -2,14 +2,13 @@
 import http.client
 import re
 import socket
-import ssl
 import time
 from html.parser import HTMLParser
 from threading import BoundedSemaphore
 from urllib.parse import urljoin, urlsplit
 
 from app.services.icons import collection_data
-from app.services.monitoring import safe_addresses
+from app.services.monitoring import pinned_http_connection, safe_addresses, secure_tls_context
 
 slots = BoundedSemaphore(4)
 
@@ -60,8 +59,8 @@ def public_title(url):
         sock = socket.create_connection((addresses[0],port),timeout=min(2,remaining))
         connection = None
         try:
-            if parsed.scheme=='https': sock = ssl.create_default_context().wrap_socket(sock,server_hostname=parsed.hostname)
-            connection = http.client.HTTPConnection(parsed.hostname,port,timeout=min(2,remaining)); connection.sock = sock
+            if parsed.scheme=='https': sock = secure_tls_context().wrap_socket(sock,server_hostname=parsed.hostname)
+            connection = pinned_http_connection(); connection.sock = sock
             host = ('['+parsed.hostname+']' if ':' in parsed.hostname else parsed.hostname) + (':'+str(parsed.port) if parsed.port else '')
             path = (parsed.path or '/') + ('?'+parsed.query if parsed.query else '')
             connection.putrequest('GET',path,skip_host=True,skip_accept_encoding=True)
