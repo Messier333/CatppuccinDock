@@ -6,14 +6,13 @@ GIF 파일 본문은 S3 호환 스토리지에 저장하고 PostgreSQL에는 이
 
 ## 초기 설정
 
+[빠른 설치](../README.md#빠른-설치)의 명령으로 파일과 시크릿을 준비하거나 [외부 시크릿 저장소](secrets.md)에서 환경변수를 주입합니다. `.env` 배포는 다음과 같이 실행합니다.
+
 ```bash
-cp .env.example .env
-# DB·로그인·암호화 키 입력 후 실행
-python3 scripts/setup_storage.py
-docker compose up --build -d --wait
+docker compose up -d --wait
 ```
 
-설정 도구는 기존 키를 바꾸거나 출력하지 않습니다. Garage는 내부 `http://garage:3900`에서만 접근할 수 있으며 RPC·S3·관리 포트를 호스트에 노출하지 않습니다. 전용 `catppuccindock` 버킷과 키는 최초 기동 시 생성합니다. 파일 경로는 `catppuccindock/backgrounds/{사용자ID}/{임의UUID}.gif`입니다. 같은 사용자의 동일 파일은 기존 DB 메타데이터로 중복을 방지하고 다른 계정의 검증된 캐시는 해당 사용자 객체로 복사합니다.
+Garage는 내부 `http://garage:3900`에서만 접근할 수 있으며 RPC·S3·관리 포트를 호스트에 노출하지 않습니다. 전용 `catppuccindock` 버킷과 키는 최초 기동 시 생성합니다. 파일 경로는 `catppuccindock/backgrounds/{사용자ID}/{임의UUID}.gif`입니다. 같은 사용자의 동일 파일은 기존 DB 메타데이터로 중복을 방지하고 다른 계정의 검증된 캐시는 해당 사용자 객체로 복사합니다.
 
 | 환경변수 | 기본값 / 용도 |
 | --- | --- |
@@ -22,10 +21,12 @@ docker compose up --build -d --wait
 | `S3_REGION` | `garage`; Garage 구성의 리전과 일치해야 함 |
 | `S3_BUCKET` | `catppuccindock` |
 | `S3_KEY_PREFIX` | `catppuccindock`; 다른 앱과 구분되는 전용 경로 |
-| `S3_ACCESS_KEY_ID` · `S3_SECRET_ACCESS_KEY` | 전용 버킷 접근 키; 서버 `.env`에만 보관 |
+| `S3_ACCESS_KEY_ID` · `S3_SECRET_ACCESS_KEY` | 전용 버킷 접근 키; 서버 `.env` 또는 시크릿 저장소에 보관 |
 | `GARAGE_RPC_SECRET` | Garage 노드 통신 키; 최초 생성 후 유지 |
 
 외부 Garage/S3를 사용하려면 S3 환경변수를 해당 저장소로 지정하고 Compose의 로컬 `garage` 의존성과 서비스를 조정하세요. 파일이 있는 버킷·리전·엔드포인트·키를 무작정 교체하면 기존 파일을 읽을 수 없습니다. Garage 생성용 키의 `.env` 값만 바꿔도 기존 키가 교체되는 것은 아닙니다. 키 교체는 Garage에서 새 키 생성·권한 부여 후 백엔드 설정을 바꾸는 절차로 진행하세요.
+
+기본 Compose에 Garage 설정이 포함되어 있어 별도 TOML 파일을 내려받지 않아도 됩니다.
 
 ## 기존 DB GIF 이관
 

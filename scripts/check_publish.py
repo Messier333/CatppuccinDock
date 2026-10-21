@@ -68,6 +68,10 @@ REQUIRED_FILES = (
     'README.md', 'docs/architecture.md', 'docs/usage.md', 'docs/authentication.md',
     'docs/integrations.md', 'docs/development.md', 'docs/api.md', 'docs/storage.md',
     'docs/publishing.md', 'deploy/garage/garage.toml', 'scripts/setup_storage.py',
+    '.github/workflows/containers.yml', '.github/dependabot.yml',
+    'compose.build.yml', 'docs/containers.md', 'scripts/init-env.sh',
+    'docs/secrets.md',
+    '.github/release-notes.md', 'scripts/prepare_release.py',
     'backend/app/services/media/__init__.py',
     'frontend/src/components/backgrounds/BackgroundPicker.vue',
 )

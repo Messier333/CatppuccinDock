@@ -11,12 +11,15 @@ GitHub에 올릴 프로젝트 루트는 `CatppuccinDock/`입니다. 상위 작�
 | `frontend/src/`, `frontend/public/`, `frontend/tests/` | Vue 소스·정적 리소스·테스트 |
 | `backend/app/`, `backend/tests/` | FastAPI 소스·기본 데이터·테스트 |
 | `deploy/` | Garage 설정·nginx/Fail2ban 예시 |
+| `.github/` | 테스트·GHCR 이미지 게시 워크플로·Action 업데이트 설정 |
 | `docs/` | 사용·개발·API·운영 문서 |
 | `scripts/` | 스토리지 초기 설정·공개 전 검사 |
 | 루트·각 앱의 빌드 설정 | Compose·Dockerfile·의존성 목록·lockfile·ignore 규칙 |
 | `.env.example`·라이선스 | 빈 비밀값을 가진 설정 예시·포함된 원본 라이선스 |
 
 기본 북마크 JSON과 로컬 아이콘 목록은 새 계정용 소스 데이터입니다. 실제 사용자의 북마크·계정은 운영 PostgreSQL에 저장됩니다. 기본 데이터·폰트·아이콘·PWA 리소스와 라이선스는 소스에 포함합니다.
+
+저장소의 `main`에 푸시하면 테스트 후 GHCR 이미지를 게시합니다. 이미지 사용 방법과 최초 패키지 공개 설정은 [컨테이너 빌드·배포](containers.md)에 있습니다.
 
 ## 서버에만 보관할 파일
 
@@ -49,7 +52,7 @@ python3 scripts/check_publish.py
 python3 scripts/check_publish.py --archive .local-backups/CatppuccinDock-source.tar.gz
 ```
 
-압축본에는 검사한 파일 내용만 포함하며 `.env`, 실행 데이터, 의존성은 넣지 않습니다. 기존 압축본은 덮어쓰지 않으므로 재생성할 때 새 파일 이름을 사용하세요. 압축을 푼 새 환경에서 `.env.example`을 복사하고 비밀값을 설정한 뒤 실행할 수 있습니다.
+압축본에는 검사한 파일 내용만 포함하며 `.env`, 실행 데이터, 의존성은 넣지 않습니다. 기존 압축본은 덮어쓰지 않으므로 재생성할 때 새 파일 이름을 사용하세요. 압축을 푼 새 환경에서는 `sh scripts/init-env.sh`로 시크릿을 준비하고 기본 Compose로 이미지를 실행하거나 `compose.build.yml`을 함께 지정해 소스에서 빌드할 수 있습니다.
 
 이 검사는 현재 파일을 대상으로 하며 Git 커밋 이력이나 외부 서비스의 데이터를 검사하지 않습니다. 실제 비밀값이 과거 커밋에 들어간 저장소라면 이력 정리와 해당 키 교체가 별도로 필요합니다. GitHub 저장소 생성·커밋·푸시는 자동으로 수행하지 않습니다.
 

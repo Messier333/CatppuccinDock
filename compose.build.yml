@@ -1,0 +1,16 @@
+# Local source build: docker compose -f docker-compose.yml -f compose.build.yml up --build -d
+services:
+  backend:
+    image: catppuccindock-backend:local
+    build:
+      context: ./backend
+
+  frontend:
+    image: catppuccindock-frontend:local
+    build:
+      context: ./frontend
+
+  # Local development tools can connect to PostgreSQL on loopback.
+  database:
+    ports:
+      - "127.0.0.1:5432:5432"

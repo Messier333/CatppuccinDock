@@ -5,7 +5,8 @@
 ## 개발과 검증
 
 ```bash
-docker compose up -d database
+sh scripts/init-env.sh
+docker compose -f docker-compose.yml -f compose.build.yml up -d database
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate
@@ -23,6 +24,8 @@ docker run --rm catppuccindock-auth-test
 테스트는 별도 SQLite DB와 로컬 임시 OIDC 서버를 사용하며 운영 DB를 사용하지 않습니다. 로그인·권한·사용자 간 데이터 격리·CRUD·2FA·기존 계정 이전·실제 RSA 서명 토큰 및 PKCE·정렬·검색 제안 검증을 포함합니다.
 
 프런트 전체 로직 테스트: `cd frontend && npm test`.
+
+GitHub Actions는 PR에서 검증을 실행하고 `main`·버전 태그에서는 테스트 성공 후 GHCR 이미지를 게시합니다. 워크플로와 이미지 실행 방법은 [컨테이너 빌드·배포](containers.md)를 참고하세요.
 
 API 계약은 [docs/api.md](api.md)를 참고하세요. 배포 전에는 DB·`.env`·Garage의 메타데이터/데이터 볼륨을 함께 백업하세요. [스토리지 운영 안내](storage.md)에 이관·백업 절차가 있습니다. 로컬 백업 디렉터리 `.local-backups/`는 버전 관리에서 제외됩니다.
 

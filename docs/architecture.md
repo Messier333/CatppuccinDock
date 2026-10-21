@@ -49,6 +49,8 @@ backend/
 
 ## 파일 배치 기준
 
+기본 `docker-compose.yml`은 GHCR 이미지를 실행하며 Garage 설정을 내장합니다. 로컬 소스 빌드는 `compose.build.yml`로 분리하고, 시크릿 초기화는 `scripts/init-env.sh`에서 처리합니다. 이미지 설치는 문서의 OpenSSL 명령 또는 외부 시크릿 주입을 사용하므로 초기화 스크립트를 다운로드할 필요가 없습니다.
+
 UI는 `frontend/src/components/`의 기능별 폴더에, API 주소·시계 등 여러 화면이 공유하는 로직은 `frontend/src/lib/`에 둡니다. GIF 관련 백엔드 로직은 `backend/app/services/media/`에 모으고 HTTP 경로는 `backend/app/api/`에서 처리합니다. API 계약은 [docs/api.md](api.md)에 있습니다.
 
 소스에서 쓰지 않는 기본 배너·아이콘 웹폰트·중복 TTF는 제거했습니다. 메뉴 배경 파일은 비공개 Garage/S3에, 소유권·출처·저장 경로는 DB에 보관합니다. 이전 DB 파일도 이관 전까지 읽을 수 있습니다. 아이콘은 SVG를, 글꼴은 WOFF2를 사용합니다. 이전 백업을 읽기 위한 배너 식별자 검증은 유지합니다. [스토리지 운영 안내](storage.md)
