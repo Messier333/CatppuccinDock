@@ -24,6 +24,34 @@ class MonitoringAndSync(unittest.TestCase):
             with self.subTest(path=path,query=query),self.assertRaises(ValueError):
                 monitoring.safe_request_target(path,query)
 
+    def test_request_target_preserves_valid_percent_escapes_and_query_delimiters(self):
+        for path,query,expected in (
+            ('','','/'),
+            ('/%00/%2f/%AF/%ff','value=%25&next=https://example.test/a?b=c',
+             '/%00/%2f/%AF/%ff?value=%25&next=https://example.test/a?b=c'),
+            ('/a?b#c','q=#one?two','/a%3Fb%23c?q=%23one?two'),
+            ("/a:@!$&'()*+,;=-._~",'',"/a:@!$&'()*+,;=-._~"),
+        ):
+            with self.subTest(path=path,query=query):
+                self.assertEqual(monitoring.safe_request_target(path,query),expected)
+
+    def test_request_target_rejects_malformed_escapes_in_path_and_query(self):
+        for suffix in ('%','%0','%GG','%2g','%g2','%/0','%%20','%20%'):
+            for path,query in (('/'+suffix,''),('/','value='+suffix)):
+                with self.subTest(path=path,query=query),self.assertRaises(ValueError):
+                    monitoring.safe_request_target(path,query)
+        for path in ('https://other.test/path','other.test/path'):
+            with self.subTest(path=path),self.assertRaises(ValueError):
+                monitoring.safe_request_target(path)
+
+    def test_request_target_handles_long_escaped_components_and_rejects_invalid_tail(self):
+        path = '/' + '%20' * 20000
+        query = 'q=' + '%2F' * 20000
+        self.assertEqual(monitoring.safe_request_target(path,query),path+'?'+query)
+        for bad_path,bad_query in ((path+'%',query),(path,query+'%2')):
+            with self.subTest(query_invalid=bad_query.endswith('%2')),self.assertRaises(ValueError):
+                monitoring.safe_request_target(bad_path,bad_query)
+
     def test_classification_dns_policy_and_no_rebinding(self):
         self.assertEqual(monitoring.classify(200)[0],'up')
         self.assertEqual(monitoring.classify(401)[0],'up')

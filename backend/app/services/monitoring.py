@@ -17,10 +17,12 @@ MAX_MONITORS = 1000
 _queue_lock = RLock()
 _executor = None
 _jobs = {}
+# A single repeated character class avoids backtracking between URI alternatives.
+# Percent escapes are validated separately below, in one linear pass.
 _SAFE_REQUEST_TARGET = re.compile(
-    r"/(?:[A-Za-z0-9._~!$&'()*+,;=:@/-]|%[0-9A-Fa-f]{2})*"
-    r"(?:\?(?:[A-Za-z0-9._~!$&'()*+,;=:@/?-]|%[0-9A-Fa-f]{2})*)?\Z"
+    r"/[A-Za-z0-9._~!$&'()*+,;=:@/?%\-]*\Z"
 )
+_HEX_DIGITS = frozenset('0123456789ABCDEFabcdef')
 
 
 def secure_tls_context():
@@ -42,6 +44,14 @@ def safe_request_target(path, query=''):
     target = path + ('?' + query if query else '')
     if not _SAFE_REQUEST_TARGET.fullmatch(target):
         raise ValueError('Invalid URL path or query')
+    index = 0
+    while index < len(target):
+        if target[index] == '%':
+            if index + 2 >= len(target) or target[index + 1] not in _HEX_DIGITS or target[index + 2] not in _HEX_DIGITS:
+                raise ValueError('Invalid URL path or query')
+            index += 3
+        else:
+            index += 1
     return target
 
 
