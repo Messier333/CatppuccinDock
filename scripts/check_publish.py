@@ -69,7 +69,7 @@ REQUIRED_FILES = (
     'docs/integrations.md', 'docs/development.md', 'docs/api.md', 'docs/storage.md',
     'docs/publishing.md', 'deploy/garage/garage.toml', 'scripts/setup_storage.py',
     '.github/workflows/containers.yml', '.github/workflows/checks.yml',
-    '.github/workflows/publish-images.yml', '.github/workflows/release.yml',
+    '.github/workflows/publish-images.yml', '.github/workflows/release.yml', 'scripts/prepare_buildkit.sh',
     '.github/workflows/quality.yml', 'ruff.toml', 'requirements-lint.txt',
     '.github/workflows/security.yml', '.github/codeql/config.yml', 'requirements-security.txt',
     'backend/requirements.in', 'scripts/check_sarif.py',

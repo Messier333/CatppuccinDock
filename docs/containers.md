@@ -135,6 +135,8 @@ docker compose -f docker-compose.yml -f compose.build.yml up --build -d --wait
 
 태그 빌드는 Docker의 latest 태그를 바꾸지 않습니다. 정식 GitHub 릴리즈는 Latest로 지정하고 사전 릴리즈는 따로 표시합니다. Action은 커밋 SHA로 고정하며 Dependabot이 갱신을 제안합니다.
 
+Buildx의 BuildKit 이미지는 [scripts/prepare_buildkit.sh](../scripts/prepare_buildkit.sh)에서 공식 `moby/buildkit:v0.34.1`의 멀티 아키텍처 이미지 해시까지 고정합니다. Docker Hub 인증 오류로 초기화가 중단되는 경우를 줄이기 위해 [Google의 Docker Hub 공개 캐시](https://docs.cloud.google.com/artifact-registry/docs/pull-cached-dockerhub-images)인 `mirror.gcr.io`를 먼저 시도하고, 캐시가 없거나 다운로드가 실패하면 Docker Hub의 같은 해시를 사용합니다. 각 제공처에서 최대 두 번 시도하며 둘 다 실패하면 빌드를 중단합니다. 버전 갱신은 이 스크립트에서 버전·해시를 함께 바꾸고 실제 다운로드를 확인하세요. Docker Hub 계정이나 별도 시크릿은 추가하지 않습니다. 앱의 기본 이미지 다운로드와 GHCR 게시 인증은 기존 설정을 사용합니다.
+
 Actions는 GitHub의 `GITHUB_TOKEN`으로 인증합니다. 검증은 읽기 권한, 이미지 게시에는 `packages: write`, 릴리즈 생성에는 `contents: write`만 부여합니다. 실제 서버의 시크릿은 Actions에 등록하지 않습니다. [GitHub 이미지 게시 안내](https://docs.github.com/en/actions/tutorials/publish-packages/publish-docker-images)
 
 처음 이미지를 게시한 뒤 GitHub의 Packages에서 프론트·백엔드 각각을 **Public**으로 설정하면 서버에서 로그인 없이 받을 수 있습니다. 처음 생성된 패키지의 기본 공개 범위는 비공개입니다. 비공개 운영은 `read:packages` 권한 PAT classic으로 `docker login ghcr.io`를 먼저 실행하세요. [GHCR 안내](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)

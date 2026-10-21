@@ -78,3 +78,6 @@ jobs:
 
       - name: Lint workflow definitions and shell steps
         run: '"$RUNNER_TEMP/actionlint" -color'
+
+      - name: Lint BuildKit image preparation
+        run: shellcheck scripts/prepare_buildkit.sh
