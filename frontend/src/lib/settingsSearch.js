@@ -1,4 +1,5 @@
 const topics = {
+  proxmox: [['내 Proxmox 연결·패널·제어', 'API 토큰을 연결하고 북마크 요약·상세 패널과 VM·LXC 제어를 설정합니다.', '홈랩 서버 노드 api 스냅샷 백업 복제 이동 메모리 cpu 권한 드래그', 'proxmox']],
   sso: [['SSO·로그인 허용 방식', 'OIDC 인증 서비스를 등록하고 SSO 전용 로그인 여부를 정합니다.', '로그인 인증 authentik keycloak issuer client secret 비밀번호 sso만', 'sso']],
   bookmarks: [
     ['북마크 다중 선택·중복 정리', '선택한 링크를 이동하거나 아이콘 변경·삭제합니다.', '일괄 대량 중복 url 이동 편집 삭제', 'bulk'],

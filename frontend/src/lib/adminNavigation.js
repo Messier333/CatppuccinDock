@@ -6,7 +6,7 @@ const groups = [
   { id: 'backgrounds', name: 'GIF · 배경 관리', sections: ['backgrounds'] },
   { id: 'accounts', name: '계정 · 보안', sections: ['security', 'sso'] },
   { id: 'users', name: '사용자 · 그룹', sections: ['users', 'groups'] },
-  { id: 'integrations', name: '서비스 연동', sections: ['import', 'sync'] },
+  { id: 'integrations', name: '서비스 연동', sections: ['proxmox', 'import', 'sync'] },
   { id: 'monitoring', name: '서비스 상태', sections: ['monitoring'] },
   { id: 'footer', name: '하단바 · 모니터링', sections: ['footer'] },
   { id: 'backup', name: '백업 · 가져오기', sections: ['backup'] },

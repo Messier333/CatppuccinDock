@@ -16,6 +16,9 @@ import { formatDate } from "../lib/clock.js";
 import FooterBar from "../components/statusbar/FooterBar.vue";
 import { reorderDirective } from "../directives/reorder.js";
 import { useVisibleBookmarkStatus } from "../composables/useVisibleBookmarkStatus.js";
+import { useProxmox } from '../composables/useProxmox.js';
+import ProxmoxBadge from '../components/integrations/ProxmoxBadge.vue';
+import '../styles/proxmox.css';
 import "../styles/home.css";
 import "../styles/statusbar.css";
 
@@ -83,6 +86,8 @@ const currentTime = ref(new Date());
 const main = ref(null), shelfLayout = ref(0);
 const statusLayout = computed(() => `${activeTab.value.id}:${editing.value}:${shelfCollapsed.value}:${shelfLayout.value}:${activeTab.value.categories.map(category => category.links.map(link => link.id).join(',')).join(';')}`);
 const serviceStatus = useVisibleBookmarkStatus(main, statusLayout);
+const { byBookmark: proxmoxByBookmark, selected: proxmoxSelected, replace: updateProxmox } = useProxmox(main, statusLayout);
+const ProxmoxPanel = defineAsyncComponent(() => import('../components/integrations/ProxmoxPanel.vue'));
 const banner = computed(() => backgroundUrl(activeTab.value));
 const tabFlavours = ["var(--green)", "var(--peach)", "var(--red)", "var(--blue)", "var(--mauve)"];
 const activeFlavour = computed(() => tabFlavours[activeTabIndex.value % tabFlavours.length]);
@@ -188,21 +193,24 @@ watch(activeTabIndex, (index) => {
               <section v-for="category in activeTab.categories" :key="category.id" :data-sort-id="category.id" class="startpage-category">
                 <h2><button v-if="editing" class="reorder-handle home-grip" :aria-label="`${category.name} 카테고리 순서 변경 · 위아래 방향키`" @keydown.up.prevent.stop="moveMain('categories', activeTab.id, activeTab.categories, category.id, -1)" @keydown.down.prevent.stop="moveMain('categories', activeTab.id, activeTab.categories, category.id, 1)"><GripVertical :size="13" /></button>{{ category.name }}</h2>
                 <div v-reorder="{ kind: 'bookmarks', parentId: category.id, disabled: !editing || reorderBusy }" class="startpage-links">
-                  <component :is="editing ? 'div' : 'a'"
+                  <component :is="editing || proxmoxByBookmark[link.id] ? 'div' : 'a'"
                     v-for="(link, linkIndex) in category.links"
                     :key="link.id"
                     :data-sort-id="link.id"
                     :data-bookmark-id="link.id"
                     class="startpage-link"
-                    :href="editing ? undefined : link.url"
+                    :class="{'pve-linked-bookmark': !editing && proxmoxByBookmark[link.id]}"
+                    :href="editing || proxmoxByBookmark[link.id] ? undefined : link.url"
                     target="_blank"
                     rel="noopener noreferrer"
                     :title="editing ? undefined : link.name"
-                    @click="editing ? $event.preventDefault() : recordBookmarkVisit(link.id,$event)"
-                    @auxclick="!editing && recordBookmarkVisit(link.id,$event)"
+                    @click="editing ? $event.preventDefault() : !proxmoxByBookmark[link.id] && recordBookmarkVisit(link.id,$event)"
+                    @auxclick="!editing && !proxmoxByBookmark[link.id] && recordBookmarkVisit(link.id,$event)"
                   >
-                    <button v-if="editing" class="reorder-handle home-grip" :aria-label="`${link.name} 북마크 순서 변경 · 좌우 방향키`" @click.stop.prevent @keydown.left.prevent.stop="moveMain('bookmarks', category.id, category.links, link.id, -1)" @keydown.right.prevent.stop="moveMain('bookmarks', category.id, category.links, link.id, 1)"><GripVertical :size="12" /></button><BookmarkIcon class="bookmark-icon" :name="link.icon" :style="{ color: bookmarkColor(link, linkIndex) }" />
-                    <span>{{ link.name }}</span>
+                    <button v-if="editing" class="reorder-handle home-grip" :aria-label="`${link.name} 북마크 순서 변경 · 좌우 방향키`" @click.stop.prevent @keydown.left.prevent.stop="moveMain('bookmarks', category.id, category.links, link.id, -1)" @keydown.right.prevent.stop="moveMain('bookmarks', category.id, category.links, link.id, 1)"><GripVertical :size="12" /></button>
+                    <a v-if="!editing && proxmoxByBookmark[link.id]" class="pve-bookmark-link" :href="link.url" target="_blank" rel="noopener noreferrer" @click="recordBookmarkVisit(link.id,$event)" @auxclick="recordBookmarkVisit(link.id,$event)"><BookmarkIcon class="bookmark-icon" :name="link.icon" :style="{color:bookmarkColor(link,linkIndex)}" /><span>{{ link.name }}</span></a>
+                    <template v-else><BookmarkIcon class="bookmark-icon" :name="link.icon" :style="{ color: bookmarkColor(link, linkIndex) }" /><span>{{ link.name }}</span></template>
+                    <ProxmoxBadge v-if="!editing && proxmoxByBookmark[link.id]" :integration="proxmoxByBookmark[link.id]" @open="proxmoxSelected = $event" />
                     <ServiceStatus v-if="serviceStatus[link.id]" :status="serviceStatus[link.id]" />
                   </component>
                 </div>
@@ -222,6 +230,7 @@ watch(activeTabIndex, (index) => {
 
     <PortalSearch v-if="searchOpen" :portal="startpage" @close="closeSearch" />
     <QuickAddDialog ref="quickAdd" :portal="startpage" :active-tab="activeTab.id" @saved="bookmarkAdded" />
+    <ProxmoxPanel v-if="proxmoxSelected" :integration="proxmoxSelected" @close="proxmoxSelected = null" @updated="updateProxmox" />
 
   </main>
 </template>
