@@ -2,6 +2,11 @@ name: Create release
 
 on:
   workflow_call:
+    inputs:
+      release_tag:
+        description: Published image version and existing Git tag
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -9,7 +14,7 @@ permissions:
 jobs:
   release:
     name: Create GitHub release
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
@@ -22,14 +27,14 @@ jobs:
 
       - name: Prepare deployment assets and instructions
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
         run: python3 scripts/prepare_release.py --tag "$RELEASE_TAG" --repository "$GITHUB_REPOSITORY" --output "$RUNNER_TEMP/release"
 
       - name: Create release with generated notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
         shell: bash
         run: |
           set -euo pipefail

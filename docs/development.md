@@ -25,7 +25,11 @@ docker run --rm catppuccindock-auth-test
 
 프런트 전체 로직 테스트: `cd frontend && npm test`.
 
-GitHub Actions는 PR에서 검증을 실행하고 `main`·버전 태그에서는 테스트 성공 후 GHCR 이미지를 게시합니다. 워크플로와 이미지 실행 방법은 [컨테이너 빌드·배포](containers.md)를 참고하세요.
+작업 흐름은 `feat/*`·`fix/*` → `dev` → `main`입니다. 작업 브랜치는 `dev`에서 만들고 PR의 대상도 `dev`로 지정합니다. 여러 변경을 `dev`에 모은 다음 출시할 때 `dev` → `main` PR을 만듭니다.
+
+GitHub Actions는 `dev` 푸시와 `dev`·`main` 대상 PR에서 품질·보안·앱·브라우저 검증을 실행합니다. `dev`는 검증만 하며, 새 푸시가 들어오면 이전 `dev` 검증을 취소하고 최신 변경을 검사합니다. `dev`의 **Run workflow** 수동 실행도 검증만 합니다. PR을 `main`에 머지하면 테스트 성공 후 patch 버전 태그를 자동 생성하고 GHCR 이미지와 GitHub 릴리즈를 게시합니다. 직접 만든 버전 태그도 지원합니다. 워크플로와 이미지 실행 방법은 [컨테이너 빌드·배포](containers.md)를 참고하세요.
+
+`main`에 워크플로 변경을 반영한 후 GitHub의 브랜치 생성 화면에서 **Source: main**, **New branch name: dev**로 통합 브랜치를 만드세요. 기존 작업 PR은 대상 브랜치를 `dev`로 변경할 수 있습니다. `main`에서 직접 수정한 내용이 있으면 다음 작업 전에 `main` → `dev` PR로 동기화합니다.
 
 API 계약은 [docs/api.md](api.md)를 참고하세요. 배포 전에는 DB·`.env`·Garage의 메타데이터/데이터 볼륨을 함께 백업하세요. [스토리지 운영 안내](storage.md)에 이관·백업 절차가 있습니다. 로컬 백업 디렉터리 `.local-backups/`는 버전 관리에서 제외됩니다.
 
