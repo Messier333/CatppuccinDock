@@ -26,6 +26,7 @@ const MonitorManager = defineAsyncComponent(() => import('../components/settings
 const FooterSettings = defineAsyncComponent(() => import('../components/settings/FooterSettings.vue'));
 const ProxySyncManager = defineAsyncComponent(() => import('../components/settings/ProxySyncManager.vue'));
 const MediaSettings = defineAsyncComponent(() => import('../components/settings/MediaSettings.vue'));
+const ProxmoxSettings = defineAsyncComponent(() => import('../components/settings/ProxmoxSettings.vue'));
 const sections = computed(() => [
   { id: "bookmarks", name: "내 북마크", icon: Bookmark, view: BookmarkManager },
   { id: "preferences", name: "개인 설정 · 앱 설치", icon: SlidersHorizontal, view: PersonalSettings },
@@ -33,10 +34,12 @@ const sections = computed(() => [
   { id: "backup", name: "백업 · 가져오기", icon: FolderDown, view: BackupManager },
   { id: "trash", name: "휴지통", icon: Archive, view: TrashManager },
   { id: "security", name: "계정 · 보안", icon: ShieldCheck, view: AccountSecurity },
+  { id: "proxmox", name: "내 Proxmox", icon: Activity, view: ProxmoxSettings },
   ...(props.role === "admin" ? [{ id: "backgrounds", name: "GIF · 배경 관리", icon: Library, view: MediaSettings }, { id: "groups", name: "그룹 관리", icon: UsersRound, view: GroupManager }, { id: "footer", name: "하단바 · 모니터링", icon: SlidersHorizontal, view: FooterSettings }, { id: "monitoring", name: "서비스 상태", icon: Activity, view: MonitorManager }, { id: "sync", name: "프록시 변경 감지", icon: RefreshCw, view: ProxySyncManager }, { id: "users", name: "사용자 관리", icon: Users, view: UserManager }, { id: "import", name: "API 링크 가져오기", icon: Download, view: ProxyImport }, { id: "shared", name: "공개 링크 관리", icon: Library, view: SharedLibrary, manage: true }, { id: "settings", name: "포털 공통 설정", icon: SlidersHorizontal, view: SiteSettings, props: { settingsSection: 'portal' } }, { id: "sso", name: "SSO · 로그인", icon: ShieldCheck, view: SiteSettings, props: { settingsSection: 'sso' } }] : []),
 ]);
 const PersonalSettings = defineAsyncComponent(() => import("../components/settings/PersonalSettings.vue"));
-const selected = ref("bookmarks");
+const requestedSection = new URLSearchParams(window.location.search).get('section');
+const selected = ref(sections.value.some(item => item.id === requestedSection) ? requestedSection : 'bookmarks');
 const section = computed(() => sections.value.find(item => item.id === selected.value) || sections.value[0]);
 const query = ref(''), content = ref(null), heading = ref(null);
 const results = computed(() => searchSettings(orderedSections.value, query.value));

@@ -6,6 +6,7 @@ Catppuccin 테마의 개인 포털입니다. Vue·FastAPI·PostgreSQL·Garage를
 - 비밀번호 로그인·2FA·OIDC SSO·로그인 기기 관리·관리자/일반 사용자 권한
 - GIF 배경 검색·업로드와 북마크 아이콘 직접 업로드·Garage 저장
 - 프록시 API 링크 가져오기·공개 링크·서비스 상태·모니터링 위젯
+- 개인 Proxmox 연동·북마크 상태 요약·드래그 패널 구성·권한별 VM/LXC 제어 ([설정 방법](docs/proxmox.md))
 - JSON/암호화 백업·복원과 포털 전용 주소의 PWA 설치
 
 ## 빠른 설치

@@ -348,3 +348,36 @@ class FooterMetric(Base):
     attempted_at: Mapped[float] = mapped_column(Float, default=0)
     next_check: Mapped[float] = mapped_column(Float, default=0, index=True)
     revision: Mapped[str] = mapped_column(String(64))
+
+
+class ServiceIntegration(Base):
+    __tablename__ = 'dock_service_integrations'
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[int] = mapped_column(ForeignKey('dock_users.id'), index=True)
+    provider: Mapped[str] = mapped_column(String(24), default='proxmox')
+    config: Mapped[dict] = mapped_column(JSON)
+    token_encrypted: Mapped[str] = mapped_column(Text)
+    revision: Mapped[str] = mapped_column(String(64))
+    result: Mapped[dict] = mapped_column(JSON, default=dict)
+    checked_at: Mapped[float | None] = mapped_column(Float)
+    next_check: Mapped[float] = mapped_column(Float, default=0)
+    checking_until: Mapped[float] = mapped_column(Float, default=0)
+    action_until: Mapped[float] = mapped_column(Float, default=0)
+    detail_after: Mapped[float] = mapped_column(Float, default=0)
+    error: Mapped[str] = mapped_column(String(240), default='')
+
+
+class IntegrationTask(Base):
+    __tablename__ = 'dock_integration_tasks'
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    integration_id: Mapped[str] = mapped_column(ForeignKey('dock_service_integrations.id', ondelete='CASCADE'), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('dock_users.id'), index=True)
+    revision: Mapped[str] = mapped_column(String(64))
+    node: Mapped[str] = mapped_column(String(128))
+    action: Mapped[str] = mapped_column(String(32))
+    target: Mapped[str] = mapped_column(String(160))
+    upid: Mapped[str] = mapped_column(String(512), default='')
+    state: Mapped[str] = mapped_column(String(24), default='submitting')
+    detail: Mapped[str] = mapped_column(String(240), default='')
+    created_at: Mapped[float] = mapped_column(Float, default=time.time)
+    checked_at: Mapped[float] = mapped_column(Float, default=0)

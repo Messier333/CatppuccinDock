@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { groupSettingsSections, sectionOrderForGroups } from '../src/lib/adminNavigation.js';
 
-const member = ['bookmarks', 'preferences', 'library', 'backup', 'trash', 'security'].map(id => ({id,name:id}));
+const member = ['bookmarks', 'preferences', 'library', 'backup', 'trash', 'security', 'proxmox'].map(id => ({id,name:id}));
 const admin = [...member, ...['backgrounds','groups','footer','monitoring','sync','users','import','shared','settings','sso'].map(id=>({id,name:id}))];
 
 test('grouping reduces menus while preserving each accessible section exactly once', () => {
-  for (const [sections,count] of [[member,6],[admin,12]]) {
+  for (const [sections,count] of [[member,7],[admin,12]]) {
     const grouped=groupSettingsSections(sections);
     assert.equal(grouped.length,count);
     assert.deepEqual(grouped.flatMap(group=>group.sections.map(section=>section.id)).sort(),sections.map(section=>section.id).sort());

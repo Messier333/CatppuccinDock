@@ -7,7 +7,7 @@ from app.db.models import Setting, User
 from app.db.session import SessionLocal
 
 router = APIRouter(prefix='/api/navigation')
-MEMBER_ITEMS = ['bookmarks', 'preferences', 'library', 'backup', 'trash', 'security']
+MEMBER_ITEMS = ['bookmarks', 'preferences', 'library', 'backup', 'trash', 'security', 'proxmox']
 ADMIN_ITEMS = ['groups', 'footer', 'monitoring', 'sync', 'users', 'import', 'shared', 'settings', 'backgrounds', 'sso']
 
 

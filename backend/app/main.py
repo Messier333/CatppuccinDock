@@ -28,6 +28,7 @@ from app.api.proxy_sync import router as proxy_sync_router
 from app.api.footer import router as footer_router
 from app.api.navigation import router as navigation_router
 from app.api.bookmark_tools import router as bookmark_tools_router
+from app.api.integrations import router as integrations_router
 from app.services.background_jobs import run as background_jobs
 from app.services import monitoring
 from app.services.media import storage
@@ -64,6 +65,7 @@ for router in (auth_router, account_router, oidc_router, portal_router, admin_ro
 app.include_router(media_settings_router)
 app.include_router(account_sessions_router)
 app.include_router(uploaded_icons_router)
+app.include_router(integrations_router)
 
 
 @app.middleware("http")
