@@ -74,7 +74,7 @@ docker compose -f docker-compose.yml -f compose.build.yml up --build -d --wait
 
 ## GitHub Actions·릴리즈
 
-`main` 푸시 시 테스트 후 AMD64·ARM64 이미지를 GHCR에 게시합니다. `v1.0.0` 같은 버전 태그에서는 이미지 게시 성공 후 GitHub 릴리즈·변경 내역·배포 안내·첨부 파일을 생성합니다. PR에서는 품질 검사와 검증만 실행합니다. 워크플로는 실행 순서·코드 품질·검증·이미지 게시·릴리즈 파일로 분리하며, 설정 검사·프론트·백엔드 테스트는 병렬로 실행합니다.
+작업 브랜치의 변경은 `dev`에 모으고, 출시할 때 `dev` → `main` PR을 머지합니다. `dev` 푸시와 `dev`·`main` 대상 PR에서는 품질·보안·테스트 검증을 실행합니다. GitHub UI에서 PR을 `main`에 머지하면 테스트 후 최신 정식 버전의 patch를 1 올린 태그를 자동으로 만듭니다(`v1.0.5` → `v1.0.6`). AMD64·ARM64 이미지를 GHCR에 게시하고 두 이미지 모두 성공하면 GitHub 릴리즈·변경 내역·배포 안내·첨부 파일을 생성합니다. 직접 만든 버전 태그도 같은 게시 과정을 사용합니다. [자동 버전·재실행·수동 릴리즈 안내](docs/containers.md#버전-릴리즈-만들기)
 
 Python Ruff·Vue/JavaScript ESLint·Actions actionlint 검사에 실패하면 후속 단계가 차단됩니다. [로컬 품질 검사 방법](docs/development.md#코드-품질-검사)
 
