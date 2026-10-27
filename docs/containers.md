@@ -111,6 +111,21 @@ docker compose -f docker-compose.yml -f compose.build.yml up --build -d --wait
 
 이 구성은 로컬 소스에서 두 앱 이미지를 빌드하고 개발 도구용 DB 포트를 127.0.0.1:5432에 엽니다. 기본 이미지 설치에서는 이 파일을 사용하지 않습니다. 이전의 `scripts/setup_storage.py`는 기존 운영자를 위한 스토리지 키 설정 도구로 유지합니다.
 
+### Node2Shell 보안 패치
+
+빌드용 Node.js는 `22.23.4`로 고정하며, CI는 `22.23.4` 이상인 최신 22 계열을 사용합니다. 운영 프론트는 nginx를 유지합니다. [Node.js 보안 릴리즈](https://nodejs.org/en/blog/release/v22.23.4)
+
+두 Dockerfile은 Brotli의 최소 보안 버전을 강제합니다. Alpine 3.24의 `brotli-libs`는 `1.2.1-r0` 이상, Debian trixie의 `libbrotli1`은 `1.1.0-2+deb13u1` 이상이 필요하며 해당 버전이 제공되지 않으면 빌드가 실패합니다. [Alpine 보안 정보](https://security.alpinelinux.org/vuln/CVE-2026-111497) · [Debian 보안 정보](https://security-tracker.debian.org/tracker/CVE-2026-111497)
+
+CI·릴리즈 및 로컬 Compose 빌드는 기본 이미지를 새로 확인합니다. Dependabot은 두 Dockerfile의 기본 이미지 업데이트도 매주 확인합니다. 소스에서 보안 패치를 적용할 때는 패키지 설치 단계의 캐시까지 새로 만들고 기존 컨테이너를 교체합니다.
+
+```bash
+docker compose -f docker-compose.yml -f compose.build.yml build --pull --no-cache backend frontend
+docker compose -f docker-compose.yml -f compose.build.yml up -d --wait backend frontend
+```
+
+GHCR 이미지를 사용하는 서버는 이 변경이 포함된 새 버전을 출시한 뒤 위의 이미지 업데이트 명령으로 적용하세요. 컨테이너 재시작만으로는 패치되지 않습니다.
+
 ## GitHub Actions·GHCR 공개 설정
 
 [containers.yml](../.github/workflows/containers.yml)은 실행 조건과 순서만 관리하며, 역할별 재사용 워크플로를 호출합니다.

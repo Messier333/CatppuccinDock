@@ -4,6 +4,7 @@ services:
     image: catppuccindock-backend:e2e
     build:
       context: ./backend
+      pull: true
     environment:
       AUTH_LOG_PATH: /tmp/auth.log
     volumes: !reset []
@@ -13,6 +14,7 @@ services:
     image: catppuccindock-frontend:e2e
     build:
       context: ./frontend
+      pull: true
     volumes: !reset []
     restart: "no"
 

@@ -4,11 +4,13 @@ services:
     image: catppuccindock-backend:local
     build:
       context: ./backend
+      pull: true
 
   frontend:
     image: catppuccindock-frontend:local
     build:
       context: ./frontend
+      pull: true
 
   # Local development tools can connect to PostgreSQL on loopback.
   database:
