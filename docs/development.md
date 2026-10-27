@@ -25,7 +25,11 @@ docker run --rm catppuccindock-auth-test
 
 프런트 전체 로직 테스트: `cd frontend && npm test`.
 
-GitHub Actions는 PR에서 검증을 실행하고 `main`·버전 태그에서는 테스트 성공 후 GHCR 이미지를 게시합니다. 워크플로와 이미지 실행 방법은 [컨테이너 빌드·배포](containers.md)를 참고하세요.
+작업 흐름은 `feature/*`·`feat/*`·`fix/*` → `main`입니다. 작업 브랜치는 최신 `main`에서 만들고 PR의 대상도 `main`으로 지정합니다. 여러 PR을 `main`에 모은 뒤, 원하는 시점에 버전 태그를 푸시해 출시합니다.
+
+GitHub Actions는 `main` 대상 PR에서 품질·보안·앱·브라우저 검증을 병렬로 실행합니다. 작업 브랜치 푸시만으로는 별도 검사를 실행하지 않으며, 열린 PR의 커밋이 갱신되면 이전 PR 검증을 취소하고 최신 변경을 검사합니다.
+
+PR을 `main`에 머지하면 PR 검사를 반복하지 않고 `latest`·`main`·`sha-커밋` 이미지만 게시합니다. 이 흐름은 `main`의 Ruleset에서 PR과 필수 검사 통과를 요구하는 것을 전제로 합니다. 버전 태그는 직접 만들며, 태그의 전체 검증과 두 이미지 게시가 성공해야 GitHub 릴리즈를 생성합니다. **Run workflow** 수동 실행도 전체 검증을 거치며, `main`에서 실행하면 이미지만 게시합니다. 워크플로와 이미지 실행 방법은 [컨테이너 빌드·배포](containers.md)를 참고하세요.
 
 API 계약은 [docs/api.md](api.md)를 참고하세요. 배포 전에는 DB·`.env`·Garage의 메타데이터/데이터 볼륨을 함께 백업하세요. [스토리지 운영 안내](storage.md)에 이관·백업 절차가 있습니다. 로컬 백업 디렉터리 `.local-backups/`는 버전 관리에서 제외됩니다.
 

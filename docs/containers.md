@@ -117,21 +117,25 @@ docker compose -f docker-compose.yml -f compose.build.yml up --build -d --wait
 
 | 파일 | 역할 |
 | --- | --- |
-| [containers.yml](../.github/workflows/containers.yml) | PR·main·태그 이벤트 수신, 품질 검사 → 테스트 → 이미지 게시 → 릴리즈 순서 관리 |
+| [containers.yml](../.github/workflows/containers.yml) | main 대상 PR에서 검증 병렬 실행, main 이미지 게시·버전 태그 릴리즈 순서 관리 |
 | [quality.yml](../.github/workflows/quality.yml) | Ruff·ESLint·actionlint 검사를 병렬 실행 |
 | [checks.yml](../.github/workflows/checks.yml) | 설정 검사·프론트·백엔드 테스트를 서로 독립된 세 작업으로 병렬 실행 |
 | [publish-images.yml](../.github/workflows/publish-images.yml) | AMD64·ARM64 프론트·백엔드 이미지를 GHCR에 게시 |
 | [release.yml](../.github/workflows/release.yml) | 버전별 배포 파일·본문 준비, GitHub 릴리즈 생성 |
 
-검증에는 공개 파일 검사·시크릿 초기화/릴리즈 파일 테스트·Compose 검증·프론트 테스트와 이미지 빌드·별도 SQLite DB의 백엔드 테스트가 포함됩니다. 코드 품질 검사와 세 검증 작업이 모두 통과해야 이미지를 게시하고, 두 이미지 게시가 모두 성공해야 태그의 릴리즈를 생성합니다.
+검증에는 공개 파일 검사·시크릿 초기화/릴리즈 파일 테스트·Compose 검증·프론트 테스트와 이미지 빌드·별도 SQLite DB의 백엔드 테스트가 포함됩니다. PR에서 품질·보안·설정 및 앱·브라우저 검증을 병렬로 실행합니다. `main` 머지 후에는 PR 검사를 반복하지 않고 `latest`·`main` 이미지를 게시합니다. 버전 태그 푸시는 전체 검증을 거치고 두 이미지 게시가 모두 성공해야 해당 태그의 릴리즈를 생성합니다.
+
+`main`의 Ruleset에서 **Require a pull request before merging**과 **Require status checks to pass**를 설정하세요. `main` 이미지 게시는 PR 검증을 통과했다는 전제로 동작하며, 보호 규칙을 우회한 직접 푸시도 추가 검증 없이 이미지 게시 경로를 실행합니다. 버전 태그 푸시·수동 실행은 전체 검증을 통과해야 게시를 진행합니다.
 
 재사용 파일은 `workflow_call`로만 실행합니다. 같은 커밋의 파일과 실행 컨텍스트를 공유하고, 별도 `workflow_run`으로 연결하지 않아 main·태그·PR의 결과가 섞이지 않습니다. 동시 실행 관리는 진입점에만 둡니다. [GitHub 재사용 워크플로 안내](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows)
 
 | 실행 조건 | 이미지 태그·릴리즈 |
 | --- | --- |
-| main 푸시·수동 실행 | latest, main, sha-커밋; 릴리즈 생성 없음 |
-| v1.2.3 태그 푸시 | 1.2.3, 1.2, sha-커밋; 두 이미지 성공 후 릴리즈 생성 |
-| PR | 검증만 실행 |
+| 작업 브랜치 푸시 | 별도 실행 없음; 열린 main 대상 PR이 갱신되면 PR 검증 실행 |
+| main 푸시(PR 머지 포함) | PR 검사 반복 없이 latest, main, sha-커밋 이미지 게시; 릴리즈 생성 없음 |
+| main 수동 실행 | 전체 검증 후 latest, main, sha-커밋 이미지 게시; 릴리즈 생성 없음 |
+| v1.2.3 태그 푸시 | 전체 검증 후 1.2.3, 1.2, sha-커밋 이미지; 두 이미지 성공 후 릴리즈 생성 |
+| main 대상 PR·작업 브랜치 수동 실행 | 검증만 실행 |
 
 태그 빌드는 Docker의 latest 태그를 바꾸지 않습니다. 정식 GitHub 릴리즈는 Latest로 지정하고 사전 릴리즈는 따로 표시합니다. Action은 커밋 SHA로 고정하며 Dependabot이 갱신을 제안합니다.
 
@@ -143,12 +147,21 @@ Actions는 GitHub의 `GITHUB_TOKEN`으로 인증합니다. 검증은 읽기 권�
 
 ## 버전 릴리즈 만들기
 
-변경사항을 main에 커밋·푸시한 뒤 태그를 만듭니다.
+작업 브랜치의 PR을 검사 통과 후 `main`에 머지하세요. 여러 PR을 모아도 릴리즈는 자동으로 생성되지 않습니다. 출시할 때 버전을 직접 정하고 최신 원격 `main` 커밋을 가리키는 태그를 만들어 푸시합니다. 다음 예시의 `v1.0.6`은 아직 사용하지 않은 버전으로 바꾸세요.
 
 ```bash
-git tag -a v1.0.0 -m "Release v1.0.0"
-git push origin v1.0.0
+git fetch origin
+git tag -a v1.0.6 origin/main -m "Release v1.0.6"
+git push origin refs/tags/v1.0.6
 ```
+
+태그 푸시는 다음 순서로 실행됩니다.
+
+1. 해당 커밋의 품질·보안·설정·앱·브라우저 검사를 병렬 실행
+2. 해당 버전으로 프론트·백엔드 AMD64·ARM64 이미지 게시
+3. GitHub 릴리즈와 배포 파일 자동 게시
+
+태그를 만드는 것은 로컬 작업이고, 원격으로 푸시해야 Actions가 시작됩니다. `main`과 태그를 함께 푸시할 필요 없이 태그만 푸시하세요. 이미지 게시가 실패하면 같은 태그의 Actions에서 실패한 작업을 재실행할 수 있습니다.
 
 릴리즈에는 [.github/release-notes.md](../.github/release-notes.md)의 빠른 설치·직접 설정·Infisical 배포·업데이트 안내와 자동 변경 내역이 들어갑니다. 병합 PR·기여자·전체 비교 링크는 GitHub가 생성합니다. [자동 릴리즈 노트](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes)
 
