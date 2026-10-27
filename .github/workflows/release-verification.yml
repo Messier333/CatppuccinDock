@@ -1,0 +1,189 @@
+name: Verify published release images
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Published image smoke test (${{ matrix.architecture }})
+    if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+      packages: read
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: [amd64, arm64]
+    steps:
+      - name: Check out release test tools
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download image digests from this workflow run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh run download "$GITHUB_RUN_ID" --name release-image-frontend --name release-image-backend --dir "$RUNNER_TEMP/release-images"
+
+      - name: Log in to GHCR for published image pulls
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up ARM64 emulation
+        if: matrix.architecture == 'arm64'
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+        with:
+          platforms: arm64
+
+      - name: Start published images and check frontend and API health
+        env:
+          ARCHITECTURE: ${{ matrix.architecture }}
+        run: |
+          python3 -m scripts.smoke_release --images "$RUNNER_TEMP/release-images" \
+            --repository "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" --platform "linux/$ARCHITECTURE"
+
+  vulnerabilities:
+    name: Image vulnerability scan (${{ matrix.architecture }})
+    if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read
+      packages: read
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: [amd64, arm64]
+    steps:
+      - name: Check out release test tools
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download image digests from this workflow run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh run download "$GITHUB_RUN_ID" --name release-image-frontend --name release-image-backend --dir "$RUNNER_TEMP/release-images"
+
+      - name: Log in to GHCR for image scanning
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install checksum-verified Trivy
+        env:
+          TRIVY_VERSION: 0.76.1
+          TRIVY_SHA256: c7cbe3137fb8a48a17574bede3dd6beb16742d1e9772929940fc90082c39d9c0
+        run: |
+          archive="$RUNNER_TEMP/trivy.tar.gz"
+          curl --fail --silent --show-error --location --retry 2 --output "$archive" \
+            "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          printf '%s  %s\n' "$TRIVY_SHA256" "$archive" | sha256sum --check --status
+          tar -xzf "$archive" -C "$RUNNER_TEMP" trivy
+
+      - name: Scan OS and application packages in both published images
+        env:
+          ARCHITECTURE: ${{ matrix.architecture }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/release-scan"
+          status=0
+          for component in frontend backend; do
+            image="$(python3 scripts/release_images.py read --directory "$RUNNER_TEMP/release-images" \
+              --repository "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" --component "$component")"
+            "$RUNNER_TEMP/trivy" image --image-src remote --platform "linux/$ARCHITECTURE" \
+              --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --timeout 10m \
+              --format json --output "$RUNNER_TEMP/release-scan/$component.json" "$image" || status=1
+          done
+          exit "$status"
+
+      - name: Save vulnerability reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-image-scan-${{ matrix.architecture }}
+          path: ${{ runner.temp }}/release-scan/*.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+  promote:
+    name: Promote verified image (${{ matrix.component }})
+    needs: [smoke, vulnerabilities]
+    if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        component: [frontend, backend]
+    steps:
+      - name: Check out release image tools
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download verified image identities
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh run download "$GITHUB_RUN_ID" --name release-image-frontend --name release-image-backend --dir "$RUNNER_TEMP/release-images"
+
+      - name: Select exact image to promote
+        id: image
+        env:
+          COMPONENT: ${{ matrix.component }}
+        run: |
+          reference="$(python3 scripts/release_images.py read --directory "$RUNNER_TEMP/release-images" \
+            --repository "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" --component "$COMPONENT")"
+          printf 'reference=%s\nname=%s\n' "$reference" "${reference%@*}" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare official image aliases
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ${{ steps.image.outputs.name }}
+          flavor: latest=auto
+          tags: |
+            type=sha,format=long
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Log in to GHCR for verified image promotion
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish official aliases without rebuilding
+        env:
+          IMAGE_REFERENCE: ${{ steps.image.outputs.reference }}
+          IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          options=()
+          while IFS= read -r tag; do
+            [[ -n "$tag" ]] && options+=(--tag "$tag")
+          done <<< "$IMAGE_TAGS"
+          test "${#options[@]}" -gt 0
+          docker buildx imagetools create "${options[@]}" "$IMAGE_REFERENCE"

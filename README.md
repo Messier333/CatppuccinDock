@@ -40,7 +40,7 @@ docker compose up -d
 
 위 명령은 비어 있는 시크릿만 생성하고 기존 값은 유지합니다. `.env`는 600 권한으로 보관합니다. DB·Garage 데이터는 Docker 볼륨에, 인증 실패 로그는 `logs/auth/`에 보관합니다.
 
-기본 `IMAGE_TAG=latest`는 `main`의 테스트를 통과한 이미지입니다. 특정 정식 버전은 `.env`에 `IMAGE_TAG=1.0.0`처럼 지정하세요. **소유자가 Actions에서 이미지를 게시하고 GHCR 패키지를 Public으로 설정한 뒤** 위 설치 명령을 사용할 수 있습니다. [이미지 게시·공개 설정](docs/containers.md)
+기본 `IMAGE_TAG=latest`는 출시 검사까지 통과한 정식 버전 이미지입니다. 특정 정식 버전은 `.env`에 `IMAGE_TAG=1.0.0`처럼 지정하세요. **소유자가 버전 태그를 푸시해 Actions에서 이미지를 게시하고 GHCR 패키지를 Public으로 설정한 뒤** 위 설치 명령을 사용할 수 있습니다. [이미지 게시·공개 설정](docs/containers.md)
 
 ## 직접 배포·시크릿 저장소
 
@@ -74,9 +74,9 @@ docker compose -f docker-compose.yml -f compose.build.yml up --build -d --wait
 
 ## GitHub Actions·릴리즈
 
-작업 브랜치에서 `main`으로 PR을 만들면 품질·보안·앱·브라우저 검증을 병렬로 실행합니다. 작업 브랜치 푸시는 별도 검사를 실행하지 않고, 열린 PR을 갱신하면 PR 검사만 다시 실행합니다. `main`에 머지하면 PR 검사를 반복하지 않고 AMD64·ARM64 이미지를 GHCR의 `latest`·`main` 태그로 게시합니다. 출시할 때 `main`의 커밋에 `v1.0.6` 같은 버전 태그를 직접 만들어 푸시하세요. 태그의 전체 검사와 두 이미지 게시가 성공하면 GitHub 릴리즈·변경 내역·배포 안내·첨부 파일을 생성합니다. [버전 태그로 릴리즈 만들기](docs/containers.md#버전-릴리즈-만들기)
+작업 브랜치에서 `main`으로 PR을 만들면 품질·보안·앱·브라우저 검증을 병렬로 실행합니다. 작업 브랜치 푸시는 별도 검사를 실행하지 않고, 열린 PR을 갱신하면 PR 검사만 다시 실행합니다. `main` 머지 후에는 이미지나 릴리즈를 게시하지 않습니다. 출시할 때 `main`의 커밋에 `v1.0.6` 같은 버전 태그를 직접 만들어 푸시하세요. 태그 대상·전체 검사·게시된 AMD64/ARM64 이미지의 기동·취약점 검사를 통과해야 정식 이미지 태그와 GitHub 릴리즈·배포 파일을 게시합니다. [버전 태그로 릴리즈 만들기](docs/containers.md#버전-릴리즈-만들기)
 
-`main`의 Ruleset에서 PR과 필수 검사 통과를 요구하도록 설정하세요. `main` 이미지 게시에는 PR에서 통과한 검증을 사용합니다. [로컬 품질 검사 방법](docs/development.md#코드-품질-검사)
+`main`의 Ruleset에서 PR과 필수 검사 통과를 요구하도록 설정하세요. [GitHub 설정 최종 안내](docs/github-actions.md)에서 필수 체크 11개·Actions 권한·GHCR 공개 설정을 확인할 수 있습니다. [로컬 품질 검사 방법](docs/development.md#코드-품질-검사)
 
 ## 디렉터리
 

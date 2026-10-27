@@ -2,7 +2,6 @@ name: CI/CD
 
 on:
   push:
-    branches: [main]
     tags: ['v*.*.*']
   pull_request:
     branches: [main]
@@ -18,12 +17,10 @@ concurrency:
 jobs:
   quality:
     name: Code quality
-    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
     uses: ./.github/workflows/quality.yml
 
   security:
     name: Dependency and security analysis
-    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
     permissions:
       contents: read
       actions: read
@@ -32,39 +29,51 @@ jobs:
 
   checks:
     name: Checks
-    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
     uses: ./.github/workflows/checks.yml
 
   browser:
     name: Browser tests
-    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
     uses: ./.github/workflows/browser-tests.yml
+
+  release-tag:
+    name: Validate release tag
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out source and main history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify version and membership in main
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: python3 scripts/check_release_tag.py --tag "$RELEASE_TAG" --commit "$GITHUB_SHA"
 
   publish:
     name: Publish images
-    needs: [quality, security, checks, browser]
-    # Main has already passed the required PR checks. Tag/manual runs still
-    # require every validation job. The status function allows skipped jobs on main.
-    if: >-
-      ${{
-        !cancelled() &&
-        github.event_name != 'pull_request' &&
-        (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) &&
-        (
-          (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-          (needs.quality.result == 'success' && needs.security.result == 'success' &&
-           needs.checks.result == 'success' && needs.browser.result == 'success')
-        )
-      }}
+    needs: [quality, security, checks, browser, release-tag]
+    if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: read
       packages: write
     uses: ./.github/workflows/publish-images.yml
 
+  verify-release:
+    name: Verify release images
+    needs: [publish]
+    if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: read
+      actions: read
+      packages: write
+    uses: ./.github/workflows/release-verification.yml
+
   release:
     name: Create release
-    needs: [publish]
-    if: ${{ !cancelled() && needs.publish.result == 'success' && startsWith(github.ref, 'refs/tags/v') }}
+    needs: [verify-release]
+    if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write
     uses: ./.github/workflows/release.yml

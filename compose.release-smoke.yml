@@ -1,0 +1,18 @@
+# Disposable release check: use the exact published images, without source builds or host mounts.
+services:
+  backend:
+    image: ${SMOKE_BACKEND_IMAGE:?Set the published backend digest}
+    platform: ${SMOKE_PLATFORM:?Set the release test platform}
+    environment:
+      AUTH_LOG_PATH: /tmp/auth.log
+    volumes: !reset []
+    restart: "no"
+  frontend:
+    image: ${SMOKE_FRONTEND_IMAGE:?Set the published frontend digest}
+    platform: ${SMOKE_PLATFORM:?Set the release test platform}
+    volumes: !reset []
+    restart: "no"
+  database:
+    restart: "no"
+  garage:
+    restart: "no"

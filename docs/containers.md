@@ -77,7 +77,7 @@ ghcr.io/overture-1928/catppuccindock-frontend
 ghcr.io/overture-1928/catppuccindock-backend
 ```
 
-`latest`는 main의 테스트를 통과한 이미지입니다. 일반 업데이트는 설치 명령을 반복하지 않고 기존 디렉터리에서 다음 명령만 실행합니다. `IMAGE_TAG=latest`는 그대로 두고 새 이미지를 받습니다.
+`latest`는 출시 검사까지 통과한 정식 버전 이미지입니다. `main` 머지만으로는 바뀌지 않습니다. 일반 업데이트는 설치 명령을 반복하지 않고 기존 디렉터리에서 다음 명령만 실행합니다. `IMAGE_TAG=latest`는 그대로 두고 새 이미지를 받습니다.
 
 ```bash
 cd ~/catppuccindock
@@ -117,31 +117,32 @@ docker compose -f docker-compose.yml -f compose.build.yml up --build -d --wait
 
 | 파일 | 역할 |
 | --- | --- |
-| [containers.yml](../.github/workflows/containers.yml) | main 대상 PR에서 검증 병렬 실행, main 이미지 게시·버전 태그 릴리즈 순서 관리 |
+| [containers.yml](../.github/workflows/containers.yml) | main 대상 PR에서 검증 병렬 실행, 버전 태그의 검증·이미지 게시·릴리즈 순서 관리 |
 | [quality.yml](../.github/workflows/quality.yml) | Ruff·ESLint·actionlint 검사를 병렬 실행 |
 | [checks.yml](../.github/workflows/checks.yml) | 설정 검사·프론트·백엔드 테스트를 서로 독립된 세 작업으로 병렬 실행 |
 | [publish-images.yml](../.github/workflows/publish-images.yml) | AMD64·ARM64 프론트·백엔드 이미지를 GHCR에 게시 |
+| [release-verification.yml](../.github/workflows/release-verification.yml) | 게시된 이미지 해시로 AMD64·ARM64 기동·취약점 검사 후 정식 태그 게시 |
 | [release.yml](../.github/workflows/release.yml) | 버전별 배포 파일·본문 준비, GitHub 릴리즈 생성 |
 
-검증에는 공개 파일 검사·시크릿 초기화/릴리즈 파일 테스트·Compose 검증·프론트 테스트와 이미지 빌드·별도 SQLite DB의 백엔드 테스트가 포함됩니다. PR에서 품질·보안·설정 및 앱·브라우저 검증을 병렬로 실행합니다. `main` 머지 후에는 PR 검사를 반복하지 않고 `latest`·`main` 이미지를 게시합니다. 버전 태그 푸시는 전체 검증을 거치고 두 이미지 게시가 모두 성공해야 해당 태그의 릴리즈를 생성합니다.
+검증에는 공개 파일 검사·시크릿 초기화/릴리즈 파일 테스트·Compose 검증·프론트 테스트와 이미지 빌드·별도 SQLite DB의 백엔드 테스트가 포함됩니다. PR에서 품질·보안·설정 및 앱·브라우저 검증을 병렬로 실행합니다. `main` 머지 후에는 추가 실행이 없습니다. 버전 태그 푸시에서만 전체 검증·GHCR 이미지 게시·출시 검증·릴리즈 생성을 진행합니다.
 
-`main`의 Ruleset에서 **Require a pull request before merging**과 **Require status checks to pass**를 설정하세요. `main` 이미지 게시는 PR 검증을 통과했다는 전제로 동작하며, 보호 규칙을 우회한 직접 푸시도 추가 검증 없이 이미지 게시 경로를 실행합니다. 버전 태그 푸시·수동 실행은 전체 검증을 통과해야 게시를 진행합니다.
+`main`의 Ruleset에서 **Require a pull request before merging**과 **Require status checks to pass**를 설정하세요. 설정할 필수 체크의 정확한 이름과 권한·패키지 공개 설정은 [GitHub 설정 최종 안내](github-actions.md)에 정리했습니다.
 
 재사용 파일은 `workflow_call`로만 실행합니다. 같은 커밋의 파일과 실행 컨텍스트를 공유하고, 별도 `workflow_run`으로 연결하지 않아 main·태그·PR의 결과가 섞이지 않습니다. 동시 실행 관리는 진입점에만 둡니다. [GitHub 재사용 워크플로 안내](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows)
 
 | 실행 조건 | 이미지 태그·릴리즈 |
 | --- | --- |
 | 작업 브랜치 푸시 | 별도 실행 없음; 열린 main 대상 PR이 갱신되면 PR 검증 실행 |
-| main 푸시(PR 머지 포함) | PR 검사 반복 없이 latest, main, sha-커밋 이미지 게시; 릴리즈 생성 없음 |
-| main 수동 실행 | 전체 검증 후 latest, main, sha-커밋 이미지 게시; 릴리즈 생성 없음 |
-| v1.2.3 태그 푸시 | 전체 검증 후 1.2.3, 1.2, sha-커밋 이미지; 두 이미지 성공 후 릴리즈 생성 |
+| main 푸시(PR 머지 포함) | 추가 실행·이미지 게시·릴리즈 생성 없음 |
+| main 수동 실행 | 전체 검증만 실행 |
+| v1.2.3 태그 푸시·태그 수동 실행 | 태그 대상·전체 검증 → 검증용 이미지 게시 → 기동·취약점 검사 → 1.2.3, 1.2, sha-커밋, latest 태그 게시 → 릴리즈 생성 |
 | main 대상 PR·작업 브랜치 수동 실행 | 검증만 실행 |
 
-태그 빌드는 Docker의 latest 태그를 바꾸지 않습니다. 정식 GitHub 릴리즈는 Latest로 지정하고 사전 릴리즈는 따로 표시합니다. Action은 커밋 SHA로 고정하며 Dependabot이 갱신을 제안합니다.
+정식 버전은 출시 검사를 통과한 뒤 Docker의 `latest` 태그도 갱신합니다. 사전 릴리즈는 `latest`를 갱신하지 않습니다. `main` 이미지 태그는 게시하지 않습니다. 정식 GitHub 릴리즈는 Latest로 지정하고 사전 릴리즈는 따로 표시합니다. Action은 커밋 SHA로 고정하며 Dependabot이 갱신을 제안합니다.
 
 Buildx의 BuildKit 이미지는 [scripts/prepare_buildkit.sh](../scripts/prepare_buildkit.sh)에서 공식 `moby/buildkit:v0.34.1`의 멀티 아키텍처 이미지 해시까지 고정합니다. Docker Hub 인증 오류로 초기화가 중단되는 경우를 줄이기 위해 [Google의 Docker Hub 공개 캐시](https://docs.cloud.google.com/artifact-registry/docs/pull-cached-dockerhub-images)인 `mirror.gcr.io`를 먼저 시도하고, 캐시가 없거나 다운로드가 실패하면 Docker Hub의 같은 해시를 사용합니다. 각 제공처에서 최대 두 번 시도하며 둘 다 실패하면 빌드를 중단합니다. 버전 갱신은 이 스크립트에서 버전·해시를 함께 바꾸고 실제 다운로드를 확인하세요. Docker Hub 계정이나 별도 시크릿은 추가하지 않습니다. 앱의 기본 이미지 다운로드와 GHCR 게시 인증은 기존 설정을 사용합니다.
 
-Actions는 GitHub의 `GITHUB_TOKEN`으로 인증합니다. 검증은 읽기 권한, 이미지 게시에는 `packages: write`, 릴리즈 생성에는 `contents: write`만 부여합니다. 실제 서버의 시크릿은 Actions에 등록하지 않습니다. [GitHub 이미지 게시 안내](https://docs.github.com/en/actions/tutorials/publish-packages/publish-docker-images)
+Actions는 GitHub의 `GITHUB_TOKEN`으로 인증합니다. 검증은 읽기 권한, 이미지 게시·정식 태그 확정에는 `packages: write`, 릴리즈 생성에는 `contents: write`만 부여합니다. 출시 검사는 `actions: read`로 같은 실행에서 업로드한 이미지 기록을 받고 `packages: read`로 검사 이미지를 내려받습니다. 실제 서버의 시크릿은 Actions에 등록하지 않습니다. [GitHub 이미지 게시 안내](https://docs.github.com/en/actions/tutorials/publish-packages/publish-docker-images)
 
 처음 이미지를 게시한 뒤 GitHub의 Packages에서 프론트·백엔드 각각을 **Public**으로 설정하면 서버에서 로그인 없이 받을 수 있습니다. 처음 생성된 패키지의 기본 공개 범위는 비공개입니다. 비공개 운영은 `read:packages` 권한 PAT classic으로 `docker login ghcr.io`를 먼저 실행하세요. [GHCR 안내](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
 
@@ -157,9 +158,14 @@ git push origin refs/tags/v1.0.6
 
 태그 푸시는 다음 순서로 실행됩니다.
 
-1. 해당 커밋의 품질·보안·설정·앱·브라우저 검사를 병렬 실행
-2. 해당 버전으로 프론트·백엔드 AMD64·ARM64 이미지 게시
-3. GitHub 릴리즈와 배포 파일 자동 게시
+1. 태그가 올바른 버전 형식이고 해당 커밋이 원격 `main`에 포함됐는지 확인하며, 품질·보안·설정·앱·브라우저 검사도 병렬 실행
+2. 프론트·백엔드 AMD64·ARM64 이미지를 한 번 빌드하고 GHCR의 `candidate-실행번호-재시도번호` 태그로 업로드
+3. 같은 실행의 이미지 해시를 사용해 AMD64·ARM64 기동 검사와 Trivy 취약점 검사를 병렬 실행
+4. 모두 통과한 이미지에 버전·`sha-커밋`·정식 버전의 `latest` 태그를 붙이고 GitHub 릴리즈와 배포 파일 게시
+
+기동 검사는 [.release-smoke Compose 설정](../compose.release-smoke.yml)으로 원본 배포 구성을 사용하되 호스트 디렉터리 마운트 없이 임시 DB·Garage·새 키·무작위 localhost 포트를 사용합니다. 소스에서 다시 빌드하지 않으며 프론트 HTML과 프론트를 경유한 `/api/health`의 DB·S3 상태를 확인합니다. 종료할 때 임시 프로젝트와 볼륨만 지웁니다.
+
+Trivy는 공식 바이너리의 버전·SHA256을 고정하며 AMD64·ARM64 이미지 각각의 OS·앱 패키지를 검사합니다. 수정 버전 유무와 관계없이 `HIGH`·`CRITICAL`이 있으면 실패합니다. JSON 보고서는 Actions Artifacts에 14일 보관합니다. 검사 실패 시 정식 버전·`latest`와 GitHub 릴리즈를 갱신하지 않으며, 진단용 `candidate-*` 이미지는 GHCR에 남을 수 있습니다.
 
 태그를 만드는 것은 로컬 작업이고, 원격으로 푸시해야 Actions가 시작됩니다. `main`과 태그를 함께 푸시할 필요 없이 태그만 푸시하세요. 이미지 게시가 실패하면 같은 태그의 Actions에서 실패한 작업을 재실행할 수 있습니다.
 
