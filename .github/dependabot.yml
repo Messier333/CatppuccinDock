@@ -33,6 +33,12 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # The root pip updater also discovers backend manifests. Keep runtime
+    # dependencies in the /backend updater to avoid duplicate PRs.
+    allow:
+      - dependency-name: pip-audit
+      - dependency-name: pip-tools
+      - dependency-name: ruff
     groups:
       development-tools:
         update-types: [minor, patch]
