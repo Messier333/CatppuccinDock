@@ -54,7 +54,8 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '22'
+          node-version: '>=22.23.4 <23'
+          check-latest: true
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
@@ -80,6 +81,7 @@ jobs:
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: ./frontend
+          pull: true
           push: false
           cache-from: type=gha,scope=image-frontend
           cache-to: type=gha,mode=max,scope=image-frontend
@@ -108,6 +110,7 @@ jobs:
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: ./backend
+          pull: true
           target: test
           load: true
           push: false
