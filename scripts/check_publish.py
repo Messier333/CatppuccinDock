@@ -80,7 +80,6 @@ REQUIRED_FILES = (
     'compose.build.yml', 'docs/containers.md', 'scripts/init-env.sh',
     'docs/secrets.md',
     '.github/release-notes.md', 'scripts/prepare_release.py',
-    '.github/workflows/version.yml', 'scripts/next_release_tag.py',
     'backend/app/services/media/__init__.py',
     'frontend/src/components/backgrounds/BackgroundPicker.vue',
 )

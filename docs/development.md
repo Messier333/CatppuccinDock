@@ -25,11 +25,11 @@ docker run --rm catppuccindock-auth-test
 
 프런트 전체 로직 테스트: `cd frontend && npm test`.
 
-작업 흐름은 `feat/*`·`fix/*` → `dev` → `main`입니다. 작업 브랜치는 `dev`에서 만들고 PR의 대상도 `dev`로 지정합니다. 여러 변경을 `dev`에 모은 다음 출시할 때 `dev` → `main` PR을 만듭니다.
+작업 흐름은 `feature/*`·`feat/*`·`fix/*` → `main`입니다. 작업 브랜치는 최신 `main`에서 만들고 PR의 대상도 `main`으로 지정합니다. 여러 PR을 `main`에 모은 뒤, 원하는 시점에 버전 태그를 푸시해 출시합니다.
 
-GitHub Actions는 `dev` 푸시와 `dev`·`main` 대상 PR에서 품질·보안·앱·브라우저 검증을 실행합니다. `dev`는 검증만 하며, 새 푸시가 들어오면 이전 `dev` 검증을 취소하고 최신 변경을 검사합니다. `dev`의 **Run workflow** 수동 실행도 검증만 합니다. PR을 `main`에 머지하면 테스트 성공 후 patch 버전 태그를 자동 생성하고 GHCR 이미지와 GitHub 릴리즈를 게시합니다. 직접 만든 버전 태그도 지원합니다. 워크플로와 이미지 실행 방법은 [컨테이너 빌드·배포](containers.md)를 참고하세요.
+GitHub Actions는 `main` 대상 PR에서 품질·보안·앱·브라우저 검증을 병렬로 실행합니다. 작업 브랜치 푸시만으로는 별도 검사를 실행하지 않으며, 열린 PR의 커밋이 갱신되면 이전 PR 검증을 취소하고 최신 변경을 검사합니다.
 
-`main`에 워크플로 변경을 반영한 후 GitHub의 브랜치 생성 화면에서 **Source: main**, **New branch name: dev**로 통합 브랜치를 만드세요. 기존 작업 PR은 대상 브랜치를 `dev`로 변경할 수 있습니다. `main`에서 직접 수정한 내용이 있으면 다음 작업 전에 `main` → `dev` PR로 동기화합니다.
+PR을 `main`에 머지하면 PR 검사를 반복하지 않고 `latest`·`main`·`sha-커밋` 이미지만 게시합니다. 이 흐름은 `main`의 Ruleset에서 PR과 필수 검사 통과를 요구하는 것을 전제로 합니다. 버전 태그는 직접 만들며, 태그의 전체 검증과 두 이미지 게시가 성공해야 GitHub 릴리즈를 생성합니다. **Run workflow** 수동 실행도 전체 검증을 거치며, `main`에서 실행하면 이미지만 게시합니다. 워크플로와 이미지 실행 방법은 [컨테이너 빌드·배포](containers.md)를 참고하세요.
 
 API 계약은 [docs/api.md](api.md)를 참고하세요. 배포 전에는 DB·`.env`·Garage의 메타데이터/데이터 볼륨을 함께 백업하세요. [스토리지 운영 안내](storage.md)에 이관·백업 절차가 있습니다. 로컬 백업 디렉터리 `.local-backups/`는 버전 관리에서 제외됩니다.
 

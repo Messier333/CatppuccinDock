@@ -117,54 +117,51 @@ docker compose -f docker-compose.yml -f compose.build.yml up --build -d --wait
 
 | 파일 | 역할 |
 | --- | --- |
-| [containers.yml](../.github/workflows/containers.yml) | dev·main 푸시와 대상 PR·태그 이벤트 수신, 품질 검사 → 테스트 → 버전 태그 → 이미지 게시 → 릴리즈 순서 관리 |
+| [containers.yml](../.github/workflows/containers.yml) | main 대상 PR에서 검증 병렬 실행, main 이미지 게시·버전 태그 릴리즈 순서 관리 |
 | [quality.yml](../.github/workflows/quality.yml) | Ruff·ESLint·actionlint 검사를 병렬 실행 |
 | [checks.yml](../.github/workflows/checks.yml) | 설정 검사·프론트·백엔드 테스트를 서로 독립된 세 작업으로 병렬 실행 |
-| [version.yml](../.github/workflows/version.yml) | 원격 정식 태그를 기준으로 다음 patch 버전 선택, 검증된 커밋에 태그 생성 |
 | [publish-images.yml](../.github/workflows/publish-images.yml) | AMD64·ARM64 프론트·백엔드 이미지를 GHCR에 게시 |
 | [release.yml](../.github/workflows/release.yml) | 버전별 배포 파일·본문 준비, GitHub 릴리즈 생성 |
 
-검증에는 공개 파일 검사·시크릿 초기화/릴리즈 파일·자동 버전 선택 테스트·Compose 검증·프론트 테스트와 이미지 빌드·별도 SQLite DB의 백엔드 테스트가 포함됩니다. 코드 품질 검사·설정 및 앱 검증·브라우저 테스트가 모두 통과해야 버전 태그를 만들고 이미지를 게시합니다. 두 이미지 게시가 모두 성공해야 태그의 릴리즈를 생성합니다.
+검증에는 공개 파일 검사·시크릿 초기화/릴리즈 파일 테스트·Compose 검증·프론트 테스트와 이미지 빌드·별도 SQLite DB의 백엔드 테스트가 포함됩니다. PR에서 품질·보안·설정 및 앱·브라우저 검증을 병렬로 실행합니다. `main` 머지 후에는 PR 검사를 반복하지 않고 `latest`·`main` 이미지를 게시합니다. 버전 태그 푸시는 전체 검증을 거치고 두 이미지 게시가 모두 성공해야 해당 태그의 릴리즈를 생성합니다.
+
+`main`의 Ruleset에서 **Require a pull request before merging**과 **Require status checks to pass**를 설정하세요. `main` 이미지 게시는 PR 검증을 통과했다는 전제로 동작하며, 보호 규칙을 우회한 직접 푸시도 추가 검증 없이 이미지 게시 경로를 실행합니다. 버전 태그 푸시·수동 실행은 전체 검증을 통과해야 게시를 진행합니다.
 
 재사용 파일은 `workflow_call`로만 실행합니다. 같은 커밋의 파일과 실행 컨텍스트를 공유하고, 별도 `workflow_run`으로 연결하지 않아 main·태그·PR의 결과가 섞이지 않습니다. 동시 실행 관리는 진입점에만 둡니다. [GitHub 재사용 워크플로 안내](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows)
 
 | 실행 조건 | 이미지 태그·릴리즈 |
 | --- | --- |
-| dev 푸시·dev 수동 실행 | 품질·보안·앱·브라우저 검증만 실행 |
-| main 푸시(PR 머지 포함)·main 수동 실행 | 다음 patch 태그 자동 생성; latest, main, 버전, major.minor, sha-커밋 이미지; 두 이미지 성공 후 릴리즈 생성 |
-| v1.2.3 태그 푸시 | 1.2.3, 1.2, sha-커밋; 두 이미지 성공 후 릴리즈 생성 |
-| dev·main 대상 PR | 검증만 실행 |
+| 작업 브랜치 푸시 | 별도 실행 없음; 열린 main 대상 PR이 갱신되면 PR 검증 실행 |
+| main 푸시(PR 머지 포함) | PR 검사 반복 없이 latest, main, sha-커밋 이미지 게시; 릴리즈 생성 없음 |
+| main 수동 실행 | 전체 검증 후 latest, main, sha-커밋 이미지 게시; 릴리즈 생성 없음 |
+| v1.2.3 태그 푸시 | 전체 검증 후 1.2.3, 1.2, sha-커밋 이미지; 두 이미지 성공 후 릴리즈 생성 |
+| main 대상 PR·작업 브랜치 수동 실행 | 검증만 실행 |
 
 태그 빌드는 Docker의 latest 태그를 바꾸지 않습니다. 정식 GitHub 릴리즈는 Latest로 지정하고 사전 릴리즈는 따로 표시합니다. Action은 커밋 SHA로 고정하며 Dependabot이 갱신을 제안합니다.
 
 Buildx의 BuildKit 이미지는 [scripts/prepare_buildkit.sh](../scripts/prepare_buildkit.sh)에서 공식 `moby/buildkit:v0.34.1`의 멀티 아키텍처 이미지 해시까지 고정합니다. Docker Hub 인증 오류로 초기화가 중단되는 경우를 줄이기 위해 [Google의 Docker Hub 공개 캐시](https://docs.cloud.google.com/artifact-registry/docs/pull-cached-dockerhub-images)인 `mirror.gcr.io`를 먼저 시도하고, 캐시가 없거나 다운로드가 실패하면 Docker Hub의 같은 해시를 사용합니다. 각 제공처에서 최대 두 번 시도하며 둘 다 실패하면 빌드를 중단합니다. 버전 갱신은 이 스크립트에서 버전·해시를 함께 바꾸고 실제 다운로드를 확인하세요. Docker Hub 계정이나 별도 시크릿은 추가하지 않습니다. 앱의 기본 이미지 다운로드와 GHCR 게시 인증은 기존 설정을 사용합니다.
 
-Actions는 GitHub의 `GITHUB_TOKEN`으로 인증합니다. 검증은 읽기 권한, 이미지 게시에는 `packages: write`, 태그·릴리즈 생성에는 `contents: write`만 부여합니다. 실제 서버의 시크릿은 Actions에 등록하지 않습니다. [GitHub 이미지 게시 안내](https://docs.github.com/en/actions/tutorials/publish-packages/publish-docker-images)
+Actions는 GitHub의 `GITHUB_TOKEN`으로 인증합니다. 검증은 읽기 권한, 이미지 게시에는 `packages: write`, 릴리즈 생성에는 `contents: write`만 부여합니다. 실제 서버의 시크릿은 Actions에 등록하지 않습니다. [GitHub 이미지 게시 안내](https://docs.github.com/en/actions/tutorials/publish-packages/publish-docker-images)
 
 처음 이미지를 게시한 뒤 GitHub의 Packages에서 프론트·백엔드 각각을 **Public**으로 설정하면 서버에서 로그인 없이 받을 수 있습니다. 처음 생성된 패키지의 기본 공개 범위는 비공개입니다. 비공개 운영은 `read:packages` 권한 PAT classic으로 `docker login ghcr.io`를 먼저 실행하세요. [GHCR 안내](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
 
 ## 버전 릴리즈 만들기
 
-작업 브랜치를 `dev`에 모은 뒤, 출시할 때 GitHub UI에서 `dev` → `main` PR을 만드세요. 필수 검사가 통과하면 **Merge pull request**로 `main`에 병합합니다. 병합으로 시작된 `main` CI/CD가 다음 순서로 실행됩니다.
-
-1. 코드 품질·보안·설정·앱·브라우저 검사
-2. 최신 정식 태그의 patch를 1 올려 병합 커밋에 태그 생성
-3. 같은 버전으로 프론트·백엔드 AMD64·ARM64 이미지 게시
-4. GitHub 릴리즈와 배포 파일 자동 게시
-
-예를 들어 원격 최신 정식 태그가 `v1.0.5`이면 다음은 `v1.0.6`입니다. 정식 태그가 없으면 `v1.0.0`부터 시작합니다. `v1.1.0-rc.1` 같은 사전 릴리즈·빌드 메타데이터 태그는 자동 증가 기준에서 제외합니다. 버전은 문자열 순서가 아닌 숫자로 비교하며, 로컬에만 있는 태그는 영향을 주지 않습니다.
-
-같은 커밋에 정식 태그가 이미 있으면 그 태그를 재사용합니다. 이미지 게시 실패 시 태그는 남고 릴리즈는 생성되지 않으므로 Actions에서 실패한 작업을 재실행하세요. 전체 워크플로를 재실행해도 같은 커밋에 새 patch 태그를 추가하지 않습니다. `main`은 동시에 하나의 실행만 진행하며 실행 중인 배포를 취소하지 않습니다. 대기 중인 실행은 GitHub 동시 실행 정책에 따라 더 최근 실행으로 대체될 수 있습니다.
-
-자동 태그는 기본 `GITHUB_TOKEN`으로 만들며, 이 토큰의 태그 생성은 새 `push` 워크플로를 시작하지 않습니다. 따라서 선택한 버전을 이미지·릴리즈 워크플로에 직접 전달해 같은 실행에서 게시를 완료합니다. 별도 PAT나 GitHub CLI 로그인이 필요 없습니다. [GitHub 토큰의 이벤트 동작](https://docs.github.com/en/actions/concepts/security/github_token)
-
-minor·major 버전이나 사전 릴리즈를 직접 지정할 때는 검증할 커밋에 태그를 만들어 푸시하세요. 다음은 최신 원격 `main`을 대상으로 `v1.1.0`을 만드는 예시입니다.
+작업 브랜치의 PR을 검사 통과 후 `main`에 머지하세요. 여러 PR을 모아도 릴리즈는 자동으로 생성되지 않습니다. 출시할 때 버전을 직접 정하고 최신 원격 `main` 커밋을 가리키는 태그를 만들어 푸시합니다. 다음 예시의 `v1.0.6`은 아직 사용하지 않은 버전으로 바꾸세요.
 
 ```bash
 git fetch origin
-git tag -a v1.1.0 origin/main -m "Release v1.1.0"
-git push origin v1.1.0
+git tag -a v1.0.6 origin/main -m "Release v1.0.6"
+git push origin refs/tags/v1.0.6
 ```
+
+태그 푸시는 다음 순서로 실행됩니다.
+
+1. 해당 커밋의 품질·보안·설정·앱·브라우저 검사를 병렬 실행
+2. 해당 버전으로 프론트·백엔드 AMD64·ARM64 이미지 게시
+3. GitHub 릴리즈와 배포 파일 자동 게시
+
+태그를 만드는 것은 로컬 작업이고, 원격으로 푸시해야 Actions가 시작됩니다. `main`과 태그를 함께 푸시할 필요 없이 태그만 푸시하세요. 이미지 게시가 실패하면 같은 태그의 Actions에서 실패한 작업을 재실행할 수 있습니다.
 
 릴리즈에는 [.github/release-notes.md](../.github/release-notes.md)의 빠른 설치·직접 설정·Infisical 배포·업데이트 안내와 자동 변경 내역이 들어갑니다. 병합 PR·기여자·전체 비교 링크는 GitHub가 생성합니다. [자동 릴리즈 노트](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes)
 

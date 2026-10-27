@@ -2,10 +2,10 @@ name: CI/CD
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
     tags: ['v*.*.*']
   pull_request:
-    branches: [main, dev]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -13,15 +13,17 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/dev' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   quality:
     name: Code quality
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
     uses: ./.github/workflows/quality.yml
 
   security:
     name: Dependency and security analysis
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
     permissions:
       contents: read
       actions: read
@@ -30,39 +32,39 @@ jobs:
 
   checks:
     name: Checks
-    needs: [quality, security]
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
     uses: ./.github/workflows/checks.yml
 
   browser:
     name: Browser tests
-    needs: [quality, security]
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
     uses: ./.github/workflows/browser-tests.yml
-
-  version:
-    name: Prepare release version
-    needs: [checks, browser]
-    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
-    permissions:
-      contents: write
-    uses: ./.github/workflows/version.yml
 
   publish:
     name: Publish images
-    needs: [version]
-    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    needs: [quality, security, checks, browser]
+    # Main has already passed the required PR checks. Tag/manual runs still
+    # require every validation job. The status function allows skipped jobs on main.
+    if: >-
+      ${{
+        !cancelled() &&
+        github.event_name != 'pull_request' &&
+        (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) &&
+        (
+          (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+          (needs.quality.result == 'success' && needs.security.result == 'success' &&
+           needs.checks.result == 'success' && needs.browser.result == 'success')
+        )
+      }}
     permissions:
       contents: read
       packages: write
     uses: ./.github/workflows/publish-images.yml
-    with:
-      release_tag: ${{ needs.version.outputs.tag }}
 
   release:
     name: Create release
-    needs: [version, publish]
-    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    needs: [publish]
+    if: ${{ !cancelled() && needs.publish.result == 'success' && startsWith(github.ref, 'refs/tags/v') }}
     permissions:
       contents: write
     uses: ./.github/workflows/release.yml
-    with:
-      release_tag: ${{ needs.version.outputs.tag }}
