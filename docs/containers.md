@@ -180,7 +180,7 @@ git push origin refs/tags/v1.0.6
 
 기동 검사는 [.release-smoke Compose 설정](../compose.release-smoke.yml)으로 원본 배포 구성을 사용하되 호스트 디렉터리 마운트 없이 임시 DB·Garage·새 키·무작위 localhost 포트를 사용합니다. 소스에서 다시 빌드하지 않으며 프론트 HTML과 프론트를 경유한 `/api/health`의 DB·S3 상태를 확인합니다. 종료할 때 임시 프로젝트와 볼륨만 지웁니다.
 
-Trivy는 공식 바이너리의 버전·SHA256을 고정하며 AMD64·ARM64 이미지 각각의 OS·앱 패키지를 검사합니다. 공급처가 수정 버전을 제공한 `HIGH`와 모든 `CRITICAL` 취약점이 릴리스를 차단합니다. 수정 버전이 없는 Critical을 임시 허용해야 할 때는 [.github/trivy-release-ignore.yaml](../.github/trivy-release-ignore.yaml)에 사유와 만료일을 기록해야 하며, 만료되면 다시 차단됩니다. 아직 수정 버전이 없는 항목도 개수와 전체 JSON 보고서에 남기며 Actions Artifacts에 14일 보관합니다. 검사 실패 시 정식 버전·`latest`와 GitHub 릴리즈를 갱신하지 않으며, 진단용 `candidate-*` 이미지는 GHCR에 남을 수 있습니다.
+Trivy는 공식 바이너리의 버전·SHA256을 고정하며 AMD64·ARM64 이미지 각각의 OS·앱 패키지를 검사합니다. 공급처가 수정 버전을 제공한 `HIGH`·`CRITICAL`과 예외가 없는 모든 `CRITICAL` 취약점이 릴리스를 차단합니다. 수정 버전이 없는 Critical을 임시 허용해야 할 때는 [.github/trivy-release-ignore.yaml](../.github/trivy-release-ignore.yaml)에 사유와 만료일을 기록해야 합니다. 예외 기간에도 공급처 수정 버전이 나오면 즉시 차단하며, 만료된 예외도 다시 차단합니다. 아직 수정 버전이 없는 항목도 개수와 전체 JSON 보고서에 남기며 Actions Artifacts에 14일 보관합니다. 검사 실패 시 정식 버전·`latest`와 GitHub 릴리즈를 갱신하지 않으며, 진단용 `candidate-*` 이미지는 GHCR에 남을 수 있습니다.
 
 태그를 만드는 것은 로컬 작업이고, 원격으로 푸시해야 Actions가 시작됩니다. `main`과 태그를 함께 푸시할 필요 없이 태그만 푸시하세요. 이미지 게시가 실패하면 같은 태그의 Actions에서 실패한 작업을 재실행할 수 있습니다.
 

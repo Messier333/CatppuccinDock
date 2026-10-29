@@ -114,17 +114,18 @@ jobs:
 
             total="$(jq '[.Results[]?.Vulnerabilities[]?] | length' "$report")"
             critical="$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' "$report")"
-            fixable_high="$(jq '[.Results[]?.Vulnerabilities[]?
-              | select(.Severity == "HIGH" and (.FixedVersion // "") != "")] | length' "$report")"
+            fixable="$(jq '[.Results[]?.Vulnerabilities[]?
+              | select((.FixedVersion // "") != "")] | length' "$report")"
             unfixed="$(jq '[.Results[]?.Vulnerabilities[]?
               | select((.FixedVersion // "") == "")] | length' "$report")"
-            printf '%s (%s): %s HIGH/CRITICAL findings; %s critical, %s fixable high, %s without a vendor fix\n' \
-              "$component" "$ARCHITECTURE" "$total" "$critical" "$fixable_high" "$unfixed"
+            printf '%s (%s): %s HIGH/CRITICAL findings; %s critical, %s fixable, %s without a vendor fix\n' \
+              "$component" "$ARCHITECTURE" "$total" "$critical" "$fixable" "$unfixed"
 
-            if (( fixable_high > 0 )); then
+            # A documented exception never suppresses a finding once a fix is available.
+            if (( fixable > 0 )); then
               printf 'Package\tInstalled\tFixed\tSeverity\tVulnerability\n'
               jq -r '.Results[]?.Vulnerabilities[]?
-                | select(.Severity == "HIGH" and (.FixedVersion // "") != "")
+                | select((.FixedVersion // "") != "")
                 | [.PkgName, .InstalledVersion, .FixedVersion, .Severity, .VulnerabilityID]
                 | @tsv' "$report"
               status=1
