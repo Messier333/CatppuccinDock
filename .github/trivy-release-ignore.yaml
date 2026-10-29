@@ -1,0 +1,7 @@
+vulnerabilities:
+  - id: CVE-2026-6653
+    statement: >-
+      Debian classifies this libxml2 denial of service as minor/no-dsa. Untrusted SVG
+      decoding runs in a resource-limited child process with DTDs, entities and external
+      resources disabled. Recheck the Debian trixie package before this exception expires.
+    expired_at: 2026-11-30

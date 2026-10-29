@@ -106,9 +106,37 @@ jobs:
           for component in frontend backend; do
             image="$(python3 scripts/release_images.py read --directory "$RUNNER_TEMP/release-images" \
               --repository "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" --component "$component")"
-            "$RUNNER_TEMP/trivy" image --image-src remote --platform "linux/$ARCHITECTURE" \
-              --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --timeout 10m \
-              --format json --output "$RUNNER_TEMP/release-scan/$component.json" "$image" || status=1
+            report="$RUNNER_TEMP/release-scan/$component.json"
+            "$RUNNER_TEMP/trivy" image --config "" --ignorefile "" \
+              --image-src remote --platform "linux/$ARCHITECTURE" \
+              --scanners vuln --severity HIGH,CRITICAL --exit-code 0 --timeout 10m \
+              --format json --output "$report" "$image"
+
+            total="$(jq '[.Results[]?.Vulnerabilities[]?] | length' "$report")"
+            critical="$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' "$report")"
+            fixable_high="$(jq '[.Results[]?.Vulnerabilities[]?
+              | select(.Severity == "HIGH" and (.FixedVersion // "") != "")] | length' "$report")"
+            unfixed="$(jq '[.Results[]?.Vulnerabilities[]?
+              | select((.FixedVersion // "") == "")] | length' "$report")"
+            printf '%s (%s): %s HIGH/CRITICAL findings; %s critical, %s fixable high, %s without a vendor fix\n' \
+              "$component" "$ARCHITECTURE" "$total" "$critical" "$fixable_high" "$unfixed"
+
+            if (( fixable_high > 0 )); then
+              printf 'Package\tInstalled\tFixed\tSeverity\tVulnerability\n'
+              jq -r '.Results[]?.Vulnerabilities[]?
+                | select(.Severity == "HIGH" and (.FixedVersion // "") != "")
+                | [.PkgName, .InstalledVersion, .FixedVersion, .Severity, .VulnerabilityID]
+                | @tsv' "$report"
+              status=1
+            fi
+
+            # Block every critical finding unless it has a documented, expiring exception.
+            if ! "$RUNNER_TEMP/trivy" image --config "" \
+              --ignorefile .github/trivy-release-ignore.yaml --show-suppressed \
+              --image-src remote --platform "linux/$ARCHITECTURE" \
+              --scanners vuln --severity CRITICAL --exit-code 1 --timeout 10m "$image"; then
+              status=1
+            fi
           done
           exit "$status"
 

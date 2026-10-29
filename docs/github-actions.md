@@ -105,7 +105,7 @@ git push origin refs/tags/v1.0.6
 
 - 태그 대상 검사 실패: `main`에 포함되지 않은 커밋이거나 버전 형식이 잘못됐는지 확인합니다.
 - 기동 검사 실패: 게시한 이미지로 프론트·DB·S3 연결이 정상인지 확인합니다. 각 테스트는 임시 프로젝트와 볼륨을 사용합니다.
-- 취약점 검사 실패: Actions의 `release-image-scan-amd64`·`release-image-scan-arm64` Artifacts에서 JSON 보고서를 받습니다. 수정 여부와 관계없이 HIGH·CRITICAL이면 차단하며 보고서는 14일 보관합니다.
+- 취약점 검사 실패: Actions 로그에 표시된 수정 가능 패키지를 갱신하고, `release-image-scan-amd64`·`release-image-scan-arm64` Artifacts에서 전체 JSON 보고서를 받습니다. 공급처가 수정 버전을 제공한 HIGH와 모든 CRITICAL 항목을 차단합니다. 수정 버전이 없는 Critical의 임시 예외는 `.github/trivy-release-ignore.yaml`에 사유와 만료일을 기록하며, 나머지 미수정 항목도 보고서에 남겨 14일 보관합니다.
 - 검사 실패 시 `candidate-*` 이미지는 남을 수 있지만 정식 이미지 태그와 GitHub 릴리즈는 게시하지 않습니다. 버그 수정은 새 PR·새 버전으로 출시하고, 일시적 네트워크 실패는 **Re-run failed jobs**로 재시도합니다.
 - 14일이 지나 이미지 기록 Artifacts가 만료됐다면 전체 태그 워크플로를 재실행해 빌드 기록부터 다시 만드세요.
 - 실제 서버의 `docker compose pull`·`docker compose up -d`는 별도 배포 작업입니다. 이 워크플로가 서버에 접속하지는 않습니다.
