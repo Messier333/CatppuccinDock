@@ -30,6 +30,44 @@ def check_http(base_url):
             raise RuntimeError('Published backend, database or storage is not healthy.')
 
 
+def check_container_isolation(compose, environment, directory):
+    network_memberships = {}
+    details_by_service = {}
+    for service in ('backend', 'frontend', 'database', 'garage'):
+        container = subprocess.run(compose+['ps', '-q', service], cwd=directory, env=environment,
+                                   capture_output=True, text=True, check=True).stdout.strip()
+        if not container:
+            raise RuntimeError(f'{service} container is missing.')
+        details = json.loads(subprocess.run(['docker', 'inspect', container], cwd=directory,
+                                            capture_output=True, text=True, check=True).stdout)[0]
+        details_by_service[service] = details
+        network_memberships[service] = set(details.get('NetworkSettings', {}).get('Networks', {}))
+
+    for service in ('backend', 'frontend'):
+        command = ['python', '-c', 'import os; assert os.geteuid() != 0'] if service == 'backend' else [
+            'sh', '-c', 'test "$(id -u)" -ne 0',
+        ]
+        subprocess.run(compose+['exec', '-T', service, *command], cwd=directory,
+                       env=environment, check=True, stdout=subprocess.DEVNULL)
+        host = details_by_service[service]['HostConfig']
+        if (not host.get('ReadonlyRootfs') or 'ALL' not in (host.get('CapDrop') or [])
+                or host.get('PidsLimit') != 128 or '/tmp' not in (host.get('Tmpfs') or {})):
+            raise RuntimeError(f'{service} container is missing filesystem, capability or process isolation.')
+        if 'no-new-privileges:true' not in (host.get('SecurityOpt') or []):
+            raise RuntimeError(f'{service} container can gain new privileges.')
+
+    frontend = network_memberships['frontend']
+    backend = network_memberships['backend']
+    data = network_memberships['database']
+    if (len(frontend) != 1 or len(data) != 1 or network_memberships['garage'] != data
+            or not frontend.isdisjoint(data) or backend != frontend | data):
+        raise RuntimeError('Frontend, backend, database and storage networks are not isolated.')
+    data_details = json.loads(subprocess.run(['docker', 'network', 'inspect', next(iter(data))], cwd=directory,
+                                             capture_output=True, text=True, check=True).stdout)[0]
+    if not data_details.get('Internal'):
+        raise RuntimeError('Database and storage network permits external traffic.')
+
+
 def run_stack(images, platform):
     if platform not in ('linux/amd64', 'linux/arm64'):
         raise ValueError('Unsupported release smoke-test platform.')
@@ -58,7 +96,8 @@ def run_stack(images, platform):
             subprocess.run(compose+[
                 'up', '--no-build', '--pull', 'never', '-d', '--wait', '--wait-timeout', '300',
             ], cwd=directory, env=env, check=True)
-            port = subprocess.run(compose+['port', 'frontend', '80'], cwd=directory, env=env,
+            check_container_isolation(compose, env, directory)
+            port = subprocess.run(compose+['port', 'frontend', '8080'], cwd=directory, env=env,
                                   capture_output=True, text=True, check=True).stdout.strip()
             if not re.fullmatch(r'127\.0\.0\.1:[1-9][0-9]*', port):
                 raise RuntimeError('Release smoke-test port must be bound to localhost.')

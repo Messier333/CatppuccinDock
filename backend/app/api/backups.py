@@ -14,7 +14,8 @@ from app.services.library import allowed_link_ids
 from app.services.proxy import url_key
 
 router=APIRouter(prefix='/api',dependencies=[Depends(require_user)])
-upload_slots = asyncio.Semaphore(2)
+upload_slots = asyncio.Semaphore(1)
+UPLOAD_TIMEOUT_SECONDS = 300
 
 @router.post('/backups/export',dependencies=[Depends(require_mutation_header)])
 def export(payload:ExportData,user:User=Depends(require_user)):
@@ -26,12 +27,35 @@ def export(payload:ExportData,user:User=Depends(require_user)):
     if len(data)>backups.MAX_DOCUMENT:raise HTTPException(413,'백업이 너무 큽니다. GIF 포함을 해제한 뒤 다시 시도해 주세요.')
     return Response(data,media_type='application/json',headers={'Content-Disposition':'attachment; filename="catppuccindock'+('-encrypted' if payload.encrypted else '')+'.json"'})
 
+def strict_object(pairs):
+    result={}
+    for key,value in pairs:
+        if key in result:raise ValueError('Duplicate JSON key')
+        result[key]=value
+    return result
+
+
+def reject_json_constant(value):
+    raise ValueError(f'Invalid JSON constant: {value}')
+
+
 async def read_payload(request,limit):
+    if request.headers.get('content-type', '').split(';', 1)[0].strip().lower()!='application/json':
+        raise HTTPException(415,'JSON 요청만 업로드할 수 있습니다.')
+    length=request.headers.get('content-length')
+    if length:
+        try:size=int(length)
+        except ValueError as error:raise HTTPException(400,'Content-Length가 올바르지 않습니다.') from error
+        if size<0:raise HTTPException(400,'Content-Length가 올바르지 않습니다.')
+        if size>limit:raise HTTPException(413,'업로드 파일이 너무 큽니다.')
     data=bytearray()
-    async for chunk in request.stream():
-        data.extend(chunk)
-        if len(data)>limit:raise HTTPException(413,'업로드 파일이 너무 큽니다.')
-    try:return json.loads(data)
+    try:
+        async with asyncio.timeout(UPLOAD_TIMEOUT_SECONDS):
+            async for chunk in request.stream():
+                if len(chunk)>limit-len(data):raise HTTPException(413,'업로드 파일이 너무 큽니다.')
+                data.extend(chunk)
+    except TimeoutError as error:raise HTTPException(408,'업로드 제한 시간을 초과했습니다.') from error
+    try:return json.loads(data,object_pairs_hook=strict_object,parse_constant=reject_json_constant)
     except (ValueError,UnicodeError,RecursionError) as error:raise HTTPException(422,'올바른 JSON 요청이 아닙니다.') from error
 
 class PreviewData(BaseModel):

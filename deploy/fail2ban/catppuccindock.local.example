@@ -1,8 +1,9 @@
-# Copy to the host's /etc/fail2ban/jail.d/ after checking logpath and firewall chain.
+# Copy to the host's /etc/fail2ban/jail.d/ after replacing the logpath and checking the firewall chain.
+# Find the auth_logs mountpoint with the command in docs/authentication.md.
 [catppuccindock]
 enabled = true
 filter = catppuccindock
-logpath = /opt/catppuccindock/logs/auth/auth.log
+logpath = /var/lib/docker/volumes/REPLACE_WITH_AUTH_LOG_VOLUME/_data/auth.log
 backend = polling
 usedns = no
 logtimezone = UTC

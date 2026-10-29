@@ -55,19 +55,27 @@ Callback URL은 외부에서 접속하는 주소에 `/api/auth/oidc/callback`을
 
 ## 로그인 실패 로그와 fail2ban
 
-앱의 IP별 반복 시도 제한과 fail2ban의 방화벽 차단은 별개의 기능입니다. Compose는 일반 로그인·2FA·최초 설정 실패(401/403/422/429)를 `logs/auth/auth.log`와 백엔드 표준 로그에 기록합니다. 로그에는 IP·인증 단계·상태 코드만 남기며 아이디·비밀번호·인증 코드를 기록하지 않습니다. 일반 페이지의 401/403이나 정상 로그인은 실패 이벤트로 집계하지 않습니다. SSO 서비스 자체의 로그인 실패는 인증 서비스에서 기록·차단해야 합니다.
+앱의 IP별 반복 시도 제한과 fail2ban의 방화벽 차단은 별개의 기능입니다. Compose는 일반 로그인·2FA·최초 설정 실패(401/403/422/429)를 `auth_logs` Docker 볼륨의 `auth.log`와 백엔드 표준 로그에 기록합니다. 로그에는 IP·인증 단계·상태 코드만 남기며 아이디·비밀번호·인증 코드를 기록하지 않습니다. 일반 페이지의 401/403이나 정상 로그인은 실패 이벤트로 집계하지 않습니다. SSO 서비스 자체의 로그인 실패는 인증 서비스에서 기록·차단해야 합니다.
 
 fail2ban이 자동 설치되거나 jail이 자동 활성화되는 것은 아닙니다. 아래 파일은 연동을 준비한 설정이며 실제 fail2ban 호스트에서 설치·활성화해야 IP 차단이 동작합니다.
 
 - 필터: `deploy/fail2ban/filter.d/catppuccindock.conf`
 - jail 예시: `deploy/fail2ban/catppuccindock.local.example` (15분 동안 5회 실패, 1시간 차단)
-- 실제 로그 경로: `<프로젝트 경로>/logs/auth/auth.log`
+- 컨테이너 로그 경로: `/var/log/catppuccindock/auth.log`
+- 호스트 로그 경로: 아래 명령으로 확인한 Docker 볼륨 경로의 `auth.log`
 
 Docker 호스트의 실제 방화벽 구조·로그 경로에 맞게 jail을 설정해야 합니다. 예시는 `DOCKER-USER`와 `iptables-allports`를 사용하므로 해당 체인이 존재하는지 확인하세요. 다른 서버의 리버스 프록시에서 차단하는 경우 그 서버에 로그를 전달하고 해당 서버의 차단 액션을 사용해야 합니다.
+
+```bash
+backend_id=$(docker compose ps -q backend)
+auth_log_dir=$(docker inspect "$backend_id" --format '{{range .Mounts}}{{if eq .Destination "/var/log/catppuccindock"}}{{.Source}}{{end}}{{end}}')
+printf '%s/auth.log\n' "$auth_log_dir"
+```
+
+출력된 절대 경로를 jail의 `logpath`에 넣습니다. Docker 데이터 디렉터리는 일반 사용자에게 읽기 권한이 없을 수 있으므로 확인 명령과 `fail2ban-regex`를 root 권한으로 실행해야 할 수 있습니다.
 
 리버스 프록시 뒤에 두면 프록시 IP가 사용자 IP 대신 기록될 수 있습니다. `deploy/nginx/trusted-proxies/proxy.conf.example`의 주소를 실제 프록시 IP로 바꿔 `.conf` 파일로 저장한 뒤 프런트를 재시작하세요. 신뢰할 프록시만 지정하고 모든 주소를 신뢰하지 마세요. 프록시도 올바른 `X-Forwarded-For`를 덮어쓰거나 추가해야 합니다. 직접 8090으로 접속하면 nginx가 접속 IP로 `X-Real-IP`를 덮어쓰며, 외부에서 전달한 임의 `X-Real-IP`는 그대로 신뢰하지 않습니다. IP가 정확히 기록되고 실제 차단 후 접속이 막히는지 별도로 검증해야 연동 완료로 볼 수 있습니다.
 
 ```bash
-fail2ban-regex logs/auth/auth.log deploy/fail2ban/filter.d/catppuccindock.conf
+sudo fail2ban-regex "$auth_log_dir/auth.log" deploy/fail2ban/filter.d/catppuccindock.conf
 ```
-

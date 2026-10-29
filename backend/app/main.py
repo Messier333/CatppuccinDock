@@ -76,6 +76,10 @@ async def private_responses(request: Request, call_next):
     if not response.headers.get('Cache-Control'):
         response.headers['Cache-Control'] = 'no-store'
     response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers.setdefault('Referrer-Policy', 'same-origin')
+    response.headers.setdefault('X-Frame-Options', 'DENY')
+    response.headers.setdefault('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+    response.headers.setdefault('X-Permitted-Cross-Domain-Policies', 'none')
     return response
 
 

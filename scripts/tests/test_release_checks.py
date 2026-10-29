@@ -141,7 +141,25 @@ class PublishedImageSmokeTests(unittest.TestCase):
             if 'up' in command and fail_start:
                 raise subprocess.CalledProcessError(1, command)
             code = 1 if 'down' in command and fail_cleanup else 0
-            return subprocess.CompletedProcess(command, code, stdout=port)
+            if command[:2] == ['docker', 'inspect']:
+                service = command[-1].removesuffix('-id')
+                memberships = {
+                    'frontend': {'project_app': {}},
+                    'backend': {'project_app': {}, 'project_data': {}},
+                    'database': {'project_data': {}},
+                    'garage': {'project_data': {}},
+                }
+                isolation = [{'HostConfig': {
+                    'ReadonlyRootfs': True, 'CapDrop': ['ALL'],
+                    'SecurityOpt': ['no-new-privileges:true'],
+                    'PidsLimit': 128, 'Tmpfs': {'/tmp': 'size=128m'},
+                }, 'NetworkSettings': {'Networks': memberships[service]}}]
+                return subprocess.CompletedProcess(command, code, stdout=json.dumps(isolation))
+            if command[:3] == ['docker', 'network', 'inspect']:
+                return subprocess.CompletedProcess(command, code, stdout=json.dumps([{'Internal': True}]))
+            if 'ps' in command and '-q' in command:
+                return subprocess.CompletedProcess(command, code, stdout=command[-1]+'-id\n')
+            return subprocess.CompletedProcess(command, code, stdout=port if 'port' in command else '')
 
         with patch.object(smoke_release.subprocess, 'run', side_effect=run), \
                 patch.object(smoke_release, 'check_http', side_effect=RuntimeError('unhealthy') if http_error else None) as http, \
@@ -167,6 +185,9 @@ class PublishedImageSmokeTests(unittest.TestCase):
         self.assertFalse(Path(options['cwd']).exists())
         self.assertEqual(self.commands[-1][0][-3:], ['down', '--volumes', '--remove-orphans'])
         self.assertFalse(any('logs' in command for command, _ in self.commands))
+        self.assertEqual(sum('exec' in command for command, _ in self.commands), 2)
+        self.assertEqual(sum(command[:2] == ['docker', 'inspect'] for command, _ in self.commands), 4)
+        self.assertEqual(sum(command[:3] == ['docker', 'network', 'inspect'] for command, _ in self.commands), 1)
 
     def test_start_failure_still_removes_only_the_disposable_project(self):
         status, http = self.execute(fail_start=True)
