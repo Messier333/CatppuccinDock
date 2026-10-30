@@ -1,6 +1,7 @@
 """Decode untrusted icon files in a bounded process. Only a PNG leaves it."""
 from io import BytesIO
 from pathlib import Path
+import os
 import resource
 import sys
 import warnings
@@ -45,9 +46,12 @@ def normalize(raw):
 
 
 def main():
+    os.umask(0o077)
     resource.setrlimit(resource.RLIMIT_AS, (256*1024*1024, 256*1024*1024))
     resource.setrlimit(resource.RLIMIT_CPU, (8, 8))
     resource.setrlimit(resource.RLIMIT_FSIZE, (128*1024, 128*1024))
+    resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+    resource.setrlimit(resource.RLIMIT_NOFILE, (64, 64))
     root = Path(sys.argv[1])
     try:
         raw = (root/'input').read_bytes()

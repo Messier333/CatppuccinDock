@@ -7,6 +7,8 @@
 !index.html
 !vite.config.js
 !nginx.conf
+!nginx-main.conf
+!security-headers.conf
 !CATPPUCCIN-STARTPAGE-LICENSE
 !src/
 !src/**

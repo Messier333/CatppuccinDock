@@ -62,6 +62,7 @@ PUBLISHABLE_SAMPLES = (
 REQUIRED_FILES = (
     '.env.example', '.gitignore', '.dockerignore', '.editorconfig', '.gitattributes', 'docker-compose.yml',
     'frontend/package.json', 'frontend/package-lock.json', 'frontend/.dockerignore',
+    'frontend/nginx.conf', 'frontend/nginx-main.conf', 'frontend/security-headers.conf',
     'frontend/CATPPUCCIN-STARTPAGE-LICENSE', 'backend/requirements.txt',
     'backend/.dockerignore', 'deploy/nginx/trusted-proxies/proxy.conf.example',
     'deploy/fail2ban/catppuccindock.local.example',

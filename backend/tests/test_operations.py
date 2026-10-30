@@ -85,6 +85,25 @@ class Operations(unittest.TestCase):
         exported=self.client.get('/api/browser-bookmarks/export')
         self.assertIn('A &amp; B',exported.text);self.assertNotIn('javascript:',exported.text)
         self.assertIn('attachment',exported.headers['content-disposition'])
+    def test_import_rejects_ambiguous_or_unbounded_json_requests(self):
+        self.setup_owner()
+        endpoint='/api/backups/import-preview'
+        unsupported=self.client.post(endpoint,content=b'{}',headers=HEADERS|{'Content-Type':'text/plain'})
+        self.assertEqual(unsupported.status_code,415,unsupported.text)
+        duplicate=self.client.post(endpoint,content=b'{"document":{},"document":{}}',
+                                   headers=HEADERS|{'Content-Type':'application/json'})
+        self.assertEqual(duplicate.status_code,422,duplicate.text)
+        constant=self.client.post(endpoint,content=b'{"document":{"value":NaN}}',
+                                  headers=HEADERS|{'Content-Type':'application/json'})
+        self.assertEqual(constant.status_code,422,constant.text)
+        oversized=self.client.post(endpoint,content=b'{}',headers=HEADERS|{
+            'Content-Type':'application/json','Content-Length':str(400*1024*1024),
+        })
+        self.assertEqual(oversized.status_code,413,oversized.text)
+        response=self.client.get('/api/health')
+        expected={'x-frame-options':'DENY','referrer-policy':'same-origin',
+                  'x-permitted-cross-domain-policies':'none'}
+        self.assertEqual({key:response.headers.get(key) for key in expected},expected)
     def test_restricted_links_enforced_on_all_routes_and_backup_restore(self):
         self.setup_owner();member,uid=self.member();other,otherid=self.member('other')
         with SessionLocal.begin() as db:

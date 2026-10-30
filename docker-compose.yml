@@ -22,6 +22,8 @@ services:
       timeout: 5s
       retries: 20
       start_period: 10s
+    networks:
+      - data
     restart: unless-stopped
 
   database:
@@ -37,6 +39,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - data
     restart: unless-stopped
 
   backend:
@@ -59,7 +63,16 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-catppuccindock}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env or the process environment}
     volumes:
-      - ./logs/auth:/var/log/catppuccindock
+      - auth_logs:/var/log/catppuccindock
+    read_only: true
+    tmpfs:
+      - /tmp:size=768m,mode=1777,noexec,nosuid,nodev
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    init: true
     expose:
       - "8000"
     healthcheck:
@@ -72,23 +85,44 @@ services:
         condition: service_healthy
       database:
         condition: service_healthy
+    networks:
+      - app
+      - data
     restart: unless-stopped
 
   frontend:
     image: ${GHCR_IMAGE_PREFIX:-ghcr.io/overture-1928/catppuccindock}-frontend:${IMAGE_TAG:-latest}
     ports:
-      - "${PORTAL_PORT:-8090}:80"
+      - "${PORTAL_PORT:-8090}:8080"
     volumes:
       - ./deploy/nginx/trusted-proxies:/etc/nginx/trusted-proxies:ro
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777,noexec,nosuid,nodev
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
     depends_on:
       backend:
         condition: service_healthy
+    networks:
+      - app
     restart: unless-stopped
 
 volumes:
   postgres_data:
   garage_meta:
   garage_data:
+  auth_logs:
+
+networks:
+  # Only the reverse proxy and API share the externally connected network.
+  app:
+  # PostgreSQL and Garage cannot reach, or be reached from, external networks.
+  data:
+    internal: true
 
 # Inline configuration keeps image deployments independent of source files.
 configs:

@@ -170,9 +170,12 @@ def convert_video(root):
 
 def main():
     # These limits apply only to this child, never to the API server.
+    os.umask(0o077)
     resource.setrlimit(resource.RLIMIT_AS, (512 * 1024 * 1024, 512 * 1024 * 1024))
     resource.setrlimit(resource.RLIMIT_CPU, (50, 51))
     resource.setrlimit(resource.RLIMIT_FSIZE, (128 * 1024 * 1024, 128 * 1024 * 1024))
+    resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+    resource.setrlimit(resource.RLIMIT_NOFILE, (64, 64))
     root = Path(sys.argv[1])
     try:
         result = convert_video(root) if len(sys.argv)>2 and sys.argv[2]=='video' else optimize(root)

@@ -38,7 +38,7 @@ docker compose up -d
 
 처음 접속하면 `.env`의 `ADMIN_SETUP_CODE`로 최초 관리자 계정을 만듭니다. 포트는 `PORTAL_PORT`, HTTPS 리버스 프록시는 `COOKIE_SECURE=true`로 설정합니다. 이후 사용자·OIDC·외부 API 연동은 관리자 화면에서 등록합니다.
 
-위 명령은 비어 있는 시크릿만 생성하고 기존 값은 유지합니다. `.env`는 600 권한으로 보관합니다. DB·Garage 데이터는 Docker 볼륨에, 인증 실패 로그는 `logs/auth/`에 보관합니다.
+위 명령은 비어 있는 시크릿만 생성하고 기존 값은 유지합니다. `.env`는 600 권한으로 보관합니다. DB·Garage 데이터와 인증 실패 로그는 각각 Docker 볼륨에 보관합니다.
 
 기본 `IMAGE_TAG=latest`는 출시 검사까지 통과한 정식 버전 이미지입니다. 특정 정식 버전은 `.env`에 `IMAGE_TAG=1.0.0`처럼 지정하세요. **소유자가 버전 태그를 푸시해 Actions에서 이미지를 게시하고 GHCR 패키지를 Public으로 설정한 뒤** 위 설치 명령을 사용할 수 있습니다. [이미지 게시·공개 설정](docs/containers.md)
 
